@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  div.tribune(data-tribune-id=tribune.id)(data-max-posts=tribune.max_posts)
+    h1= title
+    ol.posts
+      each post in tribune.posts
+        include post
+    form(action=tribune.post_url)(method="post")
+      input(type="text")(name="message")(placeholder="Your message")
+      input(type="submit")(value="⏎")
