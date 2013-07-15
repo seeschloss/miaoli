@@ -83,10 +83,13 @@ Tribune.prototype.setup_submit = function() {
     var message = this.message.value;
 
     if (message.length > 0) {
+      var nickname = this.nickname.value;
+
       socket.emit('post', {
         tribune: id,
         message: message,
-        info: 'Anonymous'
+        info: 'Anonymous',
+        nick: nickname
       });
     }
 

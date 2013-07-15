@@ -34,9 +34,17 @@ exports.form_post = function(req, res, next) {
     message: req.body.message,
     timestamp: Date.now(),
     info: req.get('User-Agent')
-  }, function(post) {
+  }, function(tribune_id, post) {
     if (undefined != exports.onNewPost) {
-      exports.onNewPost(post);
+      var rendered_post = jade.renderFile(
+        'views/post.jade',
+        { tribune: tribune, post: post },
+        function(err, str) {
+          if (!err) {
+            exports.onNewPost(tribune.id, str);
+          }
+        }
+      );
     }
 
     res.set('Location', '/tribune/' + tribune.id);
@@ -75,9 +83,9 @@ exports.xml = function(req, res, next) {
   xml += '<board site="">\n';
 
   req.tribune.posts.reverse().forEach(function(post) {
-    xml += ' <post id="' + post.id + '" time="' + post.tribune_timestamp() + '">\n';
-    xml += '  <info>' + post.info + '</info>\n';
-    xml += '  <login>' + (post.user != undefined ? post.user.name : '') + '</login>\n';
+    xml += ' <post id="' + post.data.id + '" time="' + post.tribune_timestamp() + '">\n';
+    xml += '  <info>' + post.data.info + '</info>\n';
+    xml += '  <login>' + (post.data.user != undefined ? post.data.user.name : '') + '</login>\n';
     xml += '  <message>' + post.message_plain() + '</message>\n';
     xml += ' </post>\n';
   });
@@ -88,12 +96,9 @@ exports.xml = function(req, res, next) {
   res.send(200);
 };
 
-var render_post = function(post) {
-  return post.info + ': ' + post.message;
-};
-
 function Tribune(id, callback) {
   this.id = id;
+  this.anonymous = true;
   this.posts = [];
 
   this.max_posts = 20;
@@ -127,7 +132,7 @@ Tribune.prototype.load_posts = function(n, callback) {
 };
 
 Tribune.prototype.sort_posts = function(a, b) {
-  return a.id > b.id ? 1 : -1;
+  return a.data.id > b.data.id ? 1 : -1;
 };
 
 Tribune.prototype.post = function(post, callback) {
@@ -142,7 +147,6 @@ Tribune.prototype.post = function(post, callback) {
 
     // Store posts preparsed in a few formats.
     db.rpush('posts:' + tribune.id + ':json', JSON.stringify(post));
-    db.rpush('posts:' + tribune.id + ':html', render_post(post));
 
     // And a post:TRIBUNE_ID:POST_ID hash with the post values.
     db.hmset('post:' + tribune.id + ':' + post.id, post);

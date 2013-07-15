@@ -1,4 +1,4 @@
-
+// vim:et:sw=2
 /**
  * Module dependencies.
  */
@@ -8,6 +8,8 @@ var express = require('express')
   , http = require('http')
   , tribune = require('./tribune')
   , io = require('socket.io')
+  , passport = require('passport')
+  , LocalStrategy = require('passport-local').Strategy
   , path = require('path');
 
 var app = express();
@@ -28,6 +30,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
+
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    return done(null, {login: username});
+
+    /*
+    User.findOne({ username: username }, function(err, user) {
+      if (err) { return done(err); }
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username.' });
+      }
+      if (!user.validPassword(password)) {
+        return done(null, false, { message: 'Incorrect password.' });
+      }
+      return done(null, user);
+    });
+    */
+  }
+));
+
 
 app.get('/', routes.home);
 

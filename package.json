@@ -10,6 +10,8 @@
     "timezone-js": "0.4.5",
     "express": "3.2.6",
     "socket.io": "0.9.16",
+    "passport": "0.1.17",
+    "passport-local": "*",
     "jade": "*",
     "redis": "*"
   }

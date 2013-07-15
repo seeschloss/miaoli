@@ -21,6 +21,15 @@ tz.loadZoneJSONData('timezones.json', true);
 exports.Post = function (tribune_id, data) {
   this.tribune = tribune_id;
 
+  this.data = {
+    id: undefined,
+    user: undefined,
+    nick: undefined,
+    info: undefined,
+    timestamp: undefined,
+    message: undefined
+  };
+
   if (undefined != data) {
     if (typeof data == 'string') {
       this.json = JSON.parse(data);
@@ -30,37 +39,39 @@ exports.Post = function (tribune_id, data) {
 
     for (var k in this.json) {
       if (this.json.hasOwnProperty(k)) {
-        this[k] = this.json[k];
+        this.data[k] = this.json[k];
       }
     }
   }
 }
 
 exports.Post.prototype.nickname = function() {
-  if (undefined != this.user) {
-    return this.user.name;
-  } else if (undefined != this.info) {
-    return this.info.substr(0, 10);
+  if (undefined != this.data.user) {
+    return this.data.user.name;
+  } else if (undefined != this.data.nick && this.data.nick.length > 0) {
+    return this.data.nick.substr(0, 15);
+  } else if (undefined != this.data.info) {
+    return this.data.info.substr(0, 10);
   } else {
     return '';
   }
 };
 
 exports.Post.prototype.clock = function() {
-  return date.strftime(new timezoneJS.Date(this.timestamp, "Europe/Paris"), "%H:%M:%S");
+  return date.strftime(new timezoneJS.Date(this.data.timestamp, "Europe/Paris"), "%H:%M:%S");
 };
 
 exports.Post.prototype.tribune_timestamp = function() {
-  return date.strftime(new timezoneJS.Date(this.timestamp, "Europe/Paris"), "%Y%m%d%H%M%S");
+  return date.strftime(new timezoneJS.Date(this.data.timestamp, "Europe/Paris"), "%Y%m%d%H%M%S");
 };
 
 exports.Post.prototype.message_html = function() {
-  if (this.message) {
+  if (this.data.message) {
     var callback = function(match, tag, text) {
       text = text.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
       return '\032' + tag + '\033' + text + '\032/' + tag + '\033';
     }
-    message = this.message.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
+    message = this.data.message.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
 
     message = message.replace(/&/g, '&amp;');
     message = message.replace(/</g, '&lt;');
@@ -92,5 +103,5 @@ exports.Post.prototype.message_html = function() {
 };
 
 exports.Post.prototype.message_plain = function() {
-  return this.message;
+  return this.data.message;
 };
