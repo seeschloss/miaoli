@@ -19,6 +19,7 @@ if (process.env.VCAP_SERVICES) {
 }
 
 exports.load = function(req, res, next) {
+  console.log(req.user);
   var id = req.params.id;
 
   req.tribune = new Tribune(id, function() {next();});
@@ -104,6 +105,7 @@ function Tribune(id, callback) {
   this.max_posts = 20;
 
   this.post_url = "/tribune/" + this.id + "/post";
+  this.login_url = "/tribune/" + this.id + "/login";
   this.title = 'Tribune ' + this.id;
 
   this.load_posts(this.max_posts, (function(tribune) {return function() {
