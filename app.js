@@ -21,8 +21,10 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.use(express.favicon());
 app.use(express.logger('dev'));
+app.use(express.cookieParser());
 app.use(express.bodyParser());
-app.use(express.methodOverride());
+//app.use(express.methodOverride());
+app.use(express.session({ secret: 'plop' }));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(app.router);
@@ -60,10 +62,12 @@ passport.use(new LocalStrategy({
 ));
 
 passport.serializeUser(function(user, done) {
+  console.log("Serialize " + user.id);
   done(null, user.id);
 });
 
 passport.deserializeUser(function(id, done) {
+  console.log("Deserialize " + id);
   done(null, {
     id: id,
     displayName: 'plop ' + id
@@ -79,7 +83,8 @@ app.all('/tribune/:id/*', tribune.load);
 app.get('/tribune/:id', routes.tribune);
 app.post('/tribune/:id/post', tribune.form_post);
 app.get('/tribune/:id/xml', tribune.xml);
-app.post('/tribune/:id/login', passport.authenticate('local'), function (req, res) { res.redirect('/tribune/' + req.params.id); });
+app.post('/tribune/:id/login', passport.authenticate('local', { session: true }), function (req, res) { res.redirect('/tribune/' + req.params.id); });
+app.get('/tribune/:id/logout', function (req, res) { req.logout(); res.redirect('/tribune/' + req.params.id); });
 
 io = io.listen(server);
 

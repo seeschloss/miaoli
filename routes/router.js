@@ -3,5 +3,5 @@ exports.home = function(req, res){
 };
 
 exports.tribune = function(req, res){
-  res.render('tribune', { title: req.tribune.title, tribune: req.tribune })
+  res.render('tribune', { title: req.tribune.title, tribune: req.tribune, user: req.user })
 };
