@@ -12,6 +12,7 @@
     "socket.io": "0.9.16",
     "passport": "0.1.17",
     "passport-local": "*",
+    "passport-google": "*",
     "jade": "*",
     "redis": "*"
   }

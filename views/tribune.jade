@@ -20,6 +20,7 @@ block content
         span.please Please login to participate.
 
     if !user
+      a.login.google(href="/auth/google") Login with Google
       form(action=tribune.login_url)(method="post")
         input(type="text")(name="username")(placeholder="Login")
         input(type="password")(name="password")(placeholder="Password")

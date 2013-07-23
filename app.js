@@ -6,11 +6,27 @@
 var express = require('express')
   , routes = require('./routes/router')
   , http = require('http')
+  , redis = require('redis')
   , tribune = require('./tribune')
   , io = require('socket.io')
   , passport = require('passport')
   , LocalStrategy = require('passport-local').Strategy
+  , GoogleStrategy = require('passport-google').Strategy
   , path = require('path');
+
+var db;
+
+// This is for AppFog. If not there, we'll just use
+// a local redis instance.
+if (process.env.VCAP_SERVICES) {
+  var conf = JSON.parse(process.env.VCAP_SERVICES);
+  for (first in conf) break;
+  conf = conf[first];
+  db = redis.createClient(conf.port, conf.host);
+  db.auth(conf.password);
+} else {
+  db = redis.createClient();
+}
 
 var app = express();
 var server = http.createServer(app);
@@ -41,23 +57,27 @@ passport.use(new LocalStrategy({
     passwordField: 'password'
   },
   function(username, password, done) {
-    done(null, {
-      id: 42,
-      displayName: username
-    });
+    var profile = {
+      displayName: username,
+      pass: password
+    };
 
-    /*
-    User.findOne({ username: username }, function(err, user) {
-      if (err) { return done(err); }
-      if (!user) {
-        return done(null, false, { message: 'Incorrect username.' });
-      }
-      if (!user.validPassword(password)) {
-        return done(null, false, { message: 'Incorrect password.' });
-      }
-      return done(null, user);
+    db.hmset('user:local:' + username, profile, function() {
+      profile.id = 'user:local:' + username;
+      done(null, profile);
     });
-    */
+  }
+));
+
+passport.use(new GoogleStrategy({
+    returnURL: 'http://aenea.seos.fr:3000/auth/google/return',
+    realm: 'http://aenea.seos.fr:3000'
+  },
+  function(identifier, profile, done) {
+    db.hmset('user:google:' + identifier, profile, function() {
+      profile.id = 'user:google:' + identifier;
+      done(null, profile);
+    });
   }
 ));
 
@@ -68,9 +88,10 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(id, done) {
   console.log("Deserialize " + id);
-  done(null, {
-    id: id,
-    displayName: 'plop ' + id
+  db.hgetall(id, function(err, data) {
+    console.log(data);
+    console.log(err);
+    done(null, data);
   });
 });
 
@@ -83,8 +104,11 @@ app.all('/tribune/:id/*', tribune.load);
 app.get('/tribune/:id', routes.tribune);
 app.post('/tribune/:id/post', tribune.form_post);
 app.get('/tribune/:id/xml', tribune.xml);
-app.post('/tribune/:id/login', passport.authenticate('local', { session: true }), function (req, res) { res.redirect('/tribune/' + req.params.id); });
+app.post('/tribune/:id/login', passport.authenticate('local'), function (req, res) { res.redirect('/tribune/' + req.params.id); });
 app.get('/tribune/:id/logout', function (req, res) { req.logout(); res.redirect('/tribune/' + req.params.id); });
+
+app.get('/auth/google', passport.authenticate('google'));
+app.get('/auth/google/return', passport.authenticate('google', { successRedirect: '/', failureRedirect: '/login' }));
 
 io = io.listen(server);
 
