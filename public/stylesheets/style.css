@@ -1,3 +1,5 @@
+/* vim:et ts=2 sw=2
+ */
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
@@ -5,6 +7,37 @@ body {
 
 a {
   color: #00B7FF;
+}
+
+.tribune [contenteditable].message {
+  width: 295px;
+  word-break: break-all;
+  display: inline-block;
+  vertical-align: top;
+  padding: 2px;
+  border: 1px solid #CCCCCC;
+  border-radius: 2px;
+  min-height: 21px;
+  box-sizing: border-box;
+}
+
+.tribune [contenteditable].message .url {
+  color: #00B7FF;
+  text-decoration: underline;
+}
+
+.tribune [contenteditable].message .clock-reference {
+  background: #BBBBBB;
+  color: #FFFFFF;
+  border-radius: 0 10px 10px 0;
+  padding-right: 4px;
+  margin-right: 0;
+  margin-left: 1px;
+  cursor: default;
+}
+
+.tribune [contenteditable].message .tag {
+  color: #BBBBBB;
 }
 
 .tribune ol {
@@ -60,7 +93,19 @@ a {
   cursor: pointer;
 }
 
+.tribune iframe {
+  border: none;
+  display: inline-block;
+  vertical-align: top;
+}
+
+.tribune.iframe {
+  margin: 0;
+  padding: 2px;
+}
+
 .tribune input[name=nickname] {
+  margin: 2px;
   padding: 2px;
   border: 1px solid #CCCCCC;
   border-radius: 2px;

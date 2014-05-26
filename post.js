@@ -1,3 +1,4 @@
+// vim: et sw=2
 var date = require("date-fu"),
     fs = require("fs"),
     timezoneJS = require("timezone-js");
@@ -71,7 +72,8 @@ exports.Post.prototype.message_html = function() {
       text = text.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
       return '\032' + tag + '\033' + text + '\032/' + tag + '\033';
     }
-    message = this.data.message.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
+    message = this.data.message.substr(0, 500);
+    message = message.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
 
     message = message.replace(/&/g, '&amp;');
     message = message.replace(/</g, '&lt;');
@@ -93,6 +95,7 @@ exports.Post.prototype.message_html = function() {
       }
     );
 
+    console.log(message);
     return message.replace(
       /((([0-9]{4})-((0[1-9])|(1[0-2]))-((0[1-9])|([12][0-9])|(3[01])))#)?((([01]?[0-9])|(2[0-3])):([0-5][0-9])(:([0-5][0-9]))?([:\^][0-9]|[¹²³⁴⁵⁶⁷⁸⁹])?(@[0-9A-Za-z]+)?)/g,
       "<span class='reference' data-timestamp='$3$4$7$12$15$17$18'>\$1\$11</span>"

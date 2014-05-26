@@ -10,11 +10,11 @@ block content
     form(action=tribune.post_url)(method="post")
       if user
         input(type="text")(name="nickname")(value=user.displayName)(disabled="disabled")(readonly="readonly")(placeholder="Nickname")
-        input(type="text")(name="message")(placeholder="Your message")
+        input(class="message-input")(type="text")(name="message")(placeholder="Your message")
         input(type="submit")(value="⏎")
       else if tribune.anonymous
         input(type="text")(name="nickname")(placeholder="Nickname")
-        input(type="text")(name="message")(placeholder="Your message")
+        input(class="message-input")(type="text")(name="message")(placeholder="Your message")
         input(type="submit")(value="⏎")
       else
         span.please Please login to participate.

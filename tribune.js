@@ -144,6 +144,8 @@ Tribune.prototype.post = function(post, callback) {
     // Now we know the post's id
     post.id = post_id;
 
+    post.message = post.message.substr(0, 500);
+
     console.log('... post id is ' + post.id);
     console.log(post);
 
