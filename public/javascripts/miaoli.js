@@ -104,19 +104,7 @@ Tribune.prototype.setup_contenteditable = function(div) {
   };
 
   var sanitize = function(html, keep_tags) {
-    if (keep_tags === undefined) {
-      keep_tags = true;
-    }
-
-    var callback = function(match, tag, attributes, text) {
-      if (tag == 'span') {
-        return text;
-      } else {
-        text = text.replace(/&lt;(m|s|u|b|i|tt|code|span)([^&]*)&gt;(.*?)&lt;\/\1&gt;/g, callback);
-        console.log(tag);
-        return '<span class="tag">&lt;' + tag + '&gt;</span><' + tag + '>' + text + '</' + tag + '><span class="tag">&lt;/' + tag + '&gt;</span>';
-      }
-    };
+    if (keep_tags === undefined) { keep_tags = true; }
 
     html = html.replace(/&nbsp;/g, ' ');
     html = html.replace(/  /g, '  ');
@@ -124,6 +112,16 @@ Tribune.prototype.setup_contenteditable = function(div) {
     html = html.replace(/<[^>]*>/g, '');
 
     if (keep_tags) {
+      var callback = function(match, tag, attributes, text) {
+        if (tag == 'span') {
+          return text;
+        } else {
+          text = text.replace(/&lt;(m|s|u|b|i|tt|code|span)([^&]*)&gt;(.*?)&lt;\/\1&gt;/g, callback);
+          console.log(tag);
+          return '<span class="tag">&lt;' + tag + '&gt;</span><' + tag + '>' + text + '</' + tag + '><span class="tag">&lt;/' + tag + '&gt;</span>';
+        }
+      };
+
       html = html.replace(/&lt;(m|s|u|b|i|tt|code|span)([^&]*)&gt;(.*?)&lt;\/\1&gt;/g, callback);
       html = html.replace(/\032/g, '<');
       html = html.replace(/\033/g, '>');
@@ -150,6 +148,8 @@ Tribune.prototype.setup_contenteditable = function(div) {
           return string;
         }
       );
+
+      html = html.replace(/\[:([^\]\/]+)\]/g, '<span class="totoz">[:\$1]</span>');
     } else {
       html = html.replace(/&lt;/g,  '<');
       html = html.replace(/&gt;/g,  '>');
@@ -241,6 +241,14 @@ Tribune.prototype.setup_events = function(elements) {
       reference.onmouseout = (function(tribune) {return function() {
         tribune.reset_highlight();
       }})(this);
+    }
+
+    var totozes = post.querySelectorAll('.totoz');
+    for (var j = 0; j < references.length, totoz = totozes[j]; j++) {
+      var img = document.createElement('img');
+      var totoz_name = totoz.innerHTML.substr(2, totoz.innerHTML.length - 3);
+      img.src = 'https://totoz.eu/img/' + totoz_name;
+      totoz.appendChild(img);
     }
   }
 };

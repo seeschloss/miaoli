@@ -95,11 +95,14 @@ exports.Post.prototype.message_html = function() {
       }
     );
 
-    console.log(message);
-    return message.replace(
+    message = message.replace(
       /((([0-9]{4})-((0[1-9])|(1[0-2]))-((0[1-9])|([12][0-9])|(3[01])))#)?((([01]?[0-9])|(2[0-3])):([0-5][0-9])(:([0-5][0-9]))?([:\^][0-9]|[¹²³⁴⁵⁶⁷⁸⁹])?(@[0-9A-Za-z]+)?)/g,
       "<span class='reference' data-timestamp='$3$4$7$12$15$17$18'>\$1\$11</span>"
     );
+
+    message = message.replace(/\[:([^\]\/]+)\]/g, '<span class="totoz">[:\$1]</span>');
+
+    return message;
   } else {
     return '';
   }
