@@ -98,8 +98,6 @@ Tribune.prototype.setup_contenteditable = function(div) {
       var sel = tribune.saveSelection(this);
       this.innerHTML = sanitize(html);
       tribune.restoreSelection(this, sel);
-
-      tribune.adjust_iframe_height();
     },
   };
 
@@ -174,51 +172,20 @@ Tribune.prototype.setup_contenteditable = function(div) {
   };
 };
 
-Tribune.prototype.adjust_iframe_height = function() {
-  // So so so ugly.
-  var tribune = this;
-  setTimeout(function() {
-    var height = tribune.message_div.offsetHeight + 10;
-    document.querySelector('.tribune iframe').height = height + 'px';
-  }, 100);
-};
-
 Tribune.prototype.setup_inputs = function() {
   var inputs = this.dom.querySelectorAll('input.message-input');
   for (var i = 0; i < inputs.length; i++) {
     // There should only be one, but just in case.
     var input = inputs.item(i);
 
-    var iframe = document.createElement('iframe');
-    var tribune = this;
-
-    iframe.onload = function() {
-      iframe.contentDocument.querySelector('body').className = 'tribune iframe';
-      iframe.contentDocument.querySelector('body').appendChild(div);
-
-      var styles = document.querySelectorAll('link[rel="stylesheet"]');
-      for (var i = 0; i < styles.length; i++) {
-        var style = styles.item(i);
-        iframe.contentDocument.querySelector('head').appendChild(style.cloneNode());
-      }
-
-      tribune.adjust_iframe_height();
-    };
-
     var div = document.createElement('div');
-
-    div.onload = function() {
-      tribune.adjust_iframe_height();
-    };
-
     div.contentEditable = true;
     div.className = 'message';
     this.message_div = div;
 
     this.setup_contenteditable(div);
 
-    input.parentNode.replaceChild(iframe, input);
-    tribune.adjust_iframe_height();
+    input.parentNode.replaceChild(div, input);
   }
 };
 
@@ -228,8 +195,9 @@ Tribune.prototype.setup_events = function(elements) {
   }
 
   for (var i = 0; i < elements.length, post = elements[i]; i++) {
-    post.querySelector('.time').onclick = (function(tribune) {return function() {
-      // "this" is the clicked element, here
+    post.querySelector('.time').onmousedown = (function(tribune) {return function(e) {
+      e.preventDefault();
+      // the mousedown event is fired before focus has changed
       tribune.insert_reference(this);
     }})(this);
 
@@ -307,10 +275,11 @@ Tribune.prototype.insert_reference = function(clock) {
 
     input_set_selection_range(input, range[0] + text.length, range[0] + text.length);
   } else {
-    function insertTextAtCursor(element, element) {
+    function insertTextAtCursor(content_element, element) {
       var sel, range, html;
       if (element.ownerDocument.getSelection) {
         sel = element.ownerDocument.getSelection();
+        console.log(sel);
         if (sel.getRangeAt && sel.rangeCount) {
           range = sel.getRangeAt(0);
           range.deleteContents();
@@ -341,7 +310,6 @@ Tribune.prototype.insert_reference = function(clock) {
     element.innerText = clock.textContent;
     element.innerHTML = clock.textContent;
 
-    document.querySelector('iframe').contentDocument.querySelector('div').focus();
     insertTextAtCursor(this.message_div, element);
   }
 };

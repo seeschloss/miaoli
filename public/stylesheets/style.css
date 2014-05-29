@@ -23,18 +23,6 @@ a {
   visibility: visible;
 }
 
-.tribune [contenteditable].message {
-  width: 295px;
-  word-break: break-all;
-  display: inline-block;
-  vertical-align: top;
-  padding: 2px;
-  border: 1px solid #CCCCCC;
-  border-radius: 2px;
-  min-height: 21px;
-  box-sizing: border-box;
-}
-
 .tribune [contenteditable].message .url {
   color: #00B7FF;
   text-decoration: underline;
@@ -122,6 +110,19 @@ a {
   padding: 2px;
 }
 
+.tribune [contenteditable].message {
+  margin-top: 2px;
+  width: 295px;
+  word-break: break-all;
+  display: inline-block;
+  vertical-align: top;
+  padding: 4px 2px 0px 2px;
+  border: 1px solid #CCCCCC;
+  border-radius: 2px;
+  min-height: 21px;
+  font-size: 14px;
+}
+
 .tribune input[name=nickname] {
   margin: 2px;
   padding: 2px;
@@ -129,6 +130,8 @@ a {
   border-radius: 2px;
   width: 25px;
   transition: width 0.2s ease;
+  min-height: 21px;
+  font-size: 14px;
 }
 
 .tribune input[name=nickname]:focus {
