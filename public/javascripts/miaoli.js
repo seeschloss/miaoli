@@ -60,18 +60,42 @@ Tribune.prototype.setup_contenteditable = function(div) {
 
   var events = {
     keydown: function(e) {
-      // Doesn't seem to work with Firefox
-      // so we're doing it on the keypress
+      this.beforeKeyDown = this.innerHTML;
+      // Enter doesn't seem to work with Firefox
+      // here so we're doing it on the keypress
       // event
+      var code = e.which;
+      if (e.altKey) switch (code) {
+        case 66: // b
+          e.preventDefault();
+          tribune.wrap_selection_with_tag('b');
+          break;
+        case 73: // i
+          e.preventDefault();
+          tribune.wrap_selection_with_tag('i');
+          break;
+        case 83: // s
+          e.preventDefault();
+          tribune.wrap_selection_with_tag('s');
+          break;
+        case 85: // u
+          e.preventDefault();
+          tribune.wrap_selection_with_tag('u');
+          break;
+        default:
+          break;
+      }
     },
     keyup: function(e) {
       // Doesn't seem to work with Firefox
       // so the behaviour is replicated on
       // the input event.
-      var html = this.innerHTML;
-      var sel = tribune.saveSelection(this);
-      this.innerHTML = sanitize(html);
-      tribune.restoreSelection(this, sel);
+      if (this.beforeKeyDown != this.innerHTML) {
+        var html = this.innerHTML;
+        var sel = tribune.saveSelection(this);
+        this.innerHTML = sanitize(html);
+        tribune.restoreSelection(this, sel);
+      }
     },
     keypress: function(e) {
       // Prevents enter from inserting any
@@ -83,12 +107,8 @@ Tribune.prototype.setup_contenteditable = function(div) {
           var message = sanitize(this.innerHTML, false);
           tribune.post(message, tribune.nickname(), 'Anonymous');
           this.innerHTML = "";
-          return false;
-        default:
-          return true;
+          break;
       }
-
-      return false;
     },
     input: function(e) {
       // Passes the text to the sanitizing
@@ -115,7 +135,6 @@ Tribune.prototype.setup_contenteditable = function(div) {
           return text;
         } else {
           text = text.replace(/&lt;(m|s|u|b|i|tt|code|span)([^&]*)&gt;(.*?)&lt;\/\1&gt;/g, callback);
-          console.log(tag);
           return '<span class="tag">&lt;' + tag + '&gt;</span><' + tag + '>' + text + '</' + tag + '><span class="tag">&lt;/' + tag + '&gt;</span>';
         }
       };
@@ -260,58 +279,77 @@ Tribune.prototype.reset_highlight = function() {
   }
 };
 
-Tribune.prototype.insert_reference = function(clock) {
-  var input = this.dom.querySelector('input[name=message]');
+Tribune.prototype.wrap_selection_with_tag = function(tag) {
+  var selection;
+  var elements = [];
+  var ranges = [];
+  var rangeCount = 0;
+  var frag;
+  var lastChild;
+  if (window.getSelection && document.activeElement == this.message_div) {
+    selection = window.getSelection();
+    if (selection.rangeCount) {
+      var i = selection.rangeCount;
+      while (i--) {
+        ranges[i] = selection.getRangeAt(i).cloneRange();
+        elements[i] = document.createElement(tag);
+        var contents = ranges[i].extractContents();
+        contents.textContent = '<' + tag + '>' + contents.textContent + '</' + tag + '>';
+        elements[i].appendChild(contents);
+        ranges[i].insertNode(elements[i]);
+        ranges[i].selectNode(elements[i]);
+      }
 
-  if (input) {
-    var text = clock.textContent + ' ';
-    var range = input_get_selection_range(input);
-    var original_text = input.value;
+      // Restore ranges
+      selection.removeAllRanges();
+      i = ranges.length;
+      while (i--) {
+        selection.addRange(ranges[i]);
+      }
+    }
+  }
+}
 
-    input.focus();
-    input.value = original_text.substring(0, range[0])
-      + text
-      + original_text.substring(range[1], original_text.length);
-
-    input_set_selection_range(input, range[0] + text.length, range[0] + text.length);
-  } else {
-    function insertTextAtCursor(content_element, element) {
-      var sel, range, html;
-      if (element.ownerDocument.getSelection) {
-        sel = element.ownerDocument.getSelection();
-        console.log(sel);
-        if (sel.getRangeAt && sel.rangeCount) {
-          range = sel.getRangeAt(0);
-          range.deleteContents();
-          var node = element.ownerDocument.createTextNode(" ");
-          if (range.startOffset > 0) {
-            range.insertNode(node);
-            range.setStartAfter(node);
-            range.setEndAfter(node);
-          }
-          range.insertNode(element);
-          range = range.cloneRange();
-          range.setStartAfter(element);
-          range.setEndAfter(element);
-          node = element.ownerDocument.createTextNode(" ");
+Tribune.prototype.insert_element_in_message = function(element) {
+    var sel, range, html;
+    if (element.ownerDocument.getSelection) {
+      sel = element.ownerDocument.getSelection();
+      if (sel.getRangeAt && sel.rangeCount) {
+        range = sel.getRangeAt(0);
+        range.deleteContents();
+        var node = element.ownerDocument.createTextNode(" ");
+        if (range.startOffset > 0) {
           range.insertNode(node);
           range.setStartAfter(node);
           range.setEndAfter(node);
-          sel.removeAllRanges();
-          sel.addRange(range);
         }
-      } else if (element.ownerDocument.selection && element.ownerDocument.selection.createRange) {
-        element.ownerDocument.selection.createRange().text = element.innerText;
+        range.insertNode(element);
+        range = range.cloneRange();
+        range.setStartAfter(element);
+        range.setEndAfter(element);
+        node = element.ownerDocument.createTextNode(" ");
+        range.insertNode(node);
+        range.setStartAfter(node);
+        range.setEndAfter(node);
+        sel.removeAllRanges();
+        sel.addRange(range);
       }
+    } else if (element.ownerDocument.selection && element.ownerDocument.selection.createRange) {
+      element.ownerDocument.selection.createRange().text = element.innerText;
     }
-
-    var element = this.message_div.ownerDocument.createElement('span');
-    element.className = 'clock-reference';
-    element.innerText = clock.textContent;
-    element.innerHTML = clock.textContent;
-
-    insertTextAtCursor(this.message_div, element);
   }
+
+
+Tribune.prototype.insert_reference = function(clock) {
+  var element = this.message_div.ownerDocument.createElement('span');
+  element.className = 'clock-reference';
+  element.innerHTML = clock.textContent;
+
+  if (document.activeElement != this.message_div) {
+    this.message_div.focus();
+  }
+
+  this.insert_element_in_message(element);
 };
 
 Tribune.prototype.new_post = function(post) {
