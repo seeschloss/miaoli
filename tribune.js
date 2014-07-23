@@ -27,6 +27,12 @@ exports.load = function(req, res, next) {
 exports.form_post = function(req, res, next) {
   var tribune = req.tribune;
 
+  if (!req.body.message) {
+    res.set('Location', '/tribune/' + tribune.id);
+    res.send(400);
+    return;
+  }
+
   console.log('New message for tribune ' + tribune.id + ":\n" + req.body.message);
 
   tribune.post({
@@ -42,13 +48,12 @@ exports.form_post = function(req, res, next) {
         function(err, str) {
           if (!err) {
             exports.onNewPost(tribune.id, str);
+            res.set('Content-Type', 'application/xml');
+            res.send(201, req.tribune.xml());
           }
         }
       );
     }
-
-    res.set('Location', '/tribune/' + tribune.id);
-    res.send(303);
   });
 };
 
@@ -75,25 +80,8 @@ exports.direct_post = function(post_data) {
 };
 
 exports.xml = function(req, res, next) {
-  // No need to write an XML formatter for this
   res.set('Content-Type', 'application/xml');
-
-  var xml = '';
-
-  xml += '<board site="">\n';
-
-  req.tribune.posts.reverse().forEach(function(post) {
-    xml += ' <post id="' + post.data.id + '" time="' + post.tribune_timestamp() + '">\n';
-    xml += '  <info>' + post.data.info + '</info>\n';
-    xml += '  <login>' + (post.data.user != undefined ? post.data.user.name : '') + '</login>\n';
-    xml += '  <message>' + post.message_plain() + '</message>\n';
-    xml += ' </post>\n';
-  });
-
-  xml += '</board>\n';
-
-  res.send(xml);
-  res.send(200);
+  res.send(200, req.tribune.xml());
 };
 
 function Tribune(id, callback) {
@@ -113,6 +101,27 @@ function Tribune(id, callback) {
       callback(tribune);
     }
   }})(this));
+};
+
+Tribune.prototype.xml = function() {
+  // No need to write an XML formatter for this
+  var xml = '<board site="' + this.url() + '">\n';
+
+  this.posts.reverse().forEach(function(post) {
+    xml += ' <post id="' + post.data.id + '" time="' + post.tribune_timestamp() + '">\n';
+    xml += '  <info>' + post.data.info + '</info>\n';
+    xml += '  <login>' + (post.data.user != undefined ? post.data.user.name : '') + '</login>\n';
+    xml += '  <message>' + post.message_plain() + '</message>\n';
+    xml += ' </post>\n';
+  });
+
+  xml += '</board>\n';
+
+  return xml;
+};
+
+Tribune.prototype.url = function() {
+  return "http://cypris.seos.fr:3000/tribune/" + this.id;
 };
 
 Tribune.prototype.load_posts = function(n, callback) {
