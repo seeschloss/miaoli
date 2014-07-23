@@ -14,20 +14,18 @@ var express = require('express')
   , GoogleStrategy = require('passport-google').Strategy
   , path = require('path');
 
-var db;
-
 // This is for AppFog. If not there, we'll just use
 // a local redis instance.
 if (process.env.VCAP_SERVICES) {
   var conf = JSON.parse(process.env.VCAP_SERVICES);
   for (first in conf) break;
   conf = conf[first];
-  db = redis.createClient(conf.port, conf.host);
-  db.auth(conf.password);
+  global.db = redis.createClient(conf.port, conf.host);
+  global.db.auth(conf.password);
 } else {
   var redis_port = process.env.REDIS_PORT || 6379;
   var redis_host = process.env.REDIS_HOST || "localhost";
-  db = redis.createClient(redis_port, redis_host);
+  global.db = redis.createClient(redis_port, redis_host);
 }
 
 var app = express();
@@ -64,7 +62,7 @@ passport.use(new LocalStrategy({
       pass: password
     };
 
-    db.hmset('user:local:' + username, profile, function() {
+    global.db.hmset('user:local:' + username, profile, function() {
       profile.id = 'user:local:' + username;
       done(null, profile);
     });
@@ -76,7 +74,7 @@ passport.use(new GoogleStrategy({
     realm: 'http://aenea.seos.fr:3000'
   },
   function(identifier, profile, done) {
-    db.hmset('user:google:' + identifier, profile, function() {
+    global.db.hmset('user:google:' + identifier, profile, function() {
       profile.id = 'user:google:' + identifier;
       done(null, profile);
     });
@@ -90,7 +88,7 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(id, done) {
   console.log("Deserialize " + id);
-  db.hgetall(id, function(err, data) {
+  global.db.hgetall(id, function(err, data) {
     console.log(data);
     console.log(err);
     done(null, data);

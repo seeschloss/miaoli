@@ -4,20 +4,6 @@ var redis = require("redis"),
     Post = require("./post.js").Post,
     jade = require("jade");
 
-var db;
-
-// This is for AppFog. If not there, we'll just use
-// a local redis instance.
-if (process.env.VCAP_SERVICES) {
-  var conf = JSON.parse(process.env.VCAP_SERVICES);
-  for (first in conf) break;
-  conf = conf[first];
-  db = redis.createClient(conf.port, conf.host);
-  db.auth(conf.password);
-} else {
-  db = redis.createClient();
-}
-
 exports.load = function(req, res, next) {
   var id = req.params.id;
 
@@ -127,7 +113,7 @@ Tribune.prototype.url = function() {
 Tribune.prototype.load_posts = function(n, callback) {
   this.posts = [];
 
-  db.lrange('posts:' + this.id + ':json', -1 * n, -1,
+  global.db.lrange('posts:' + this.id + ':json', -1 * n, -1,
    (function(tribune) {return function(err, json_posts) {
     for (var i = 0, l = json_posts.length ; i < l ; i++) {
       var post = new Post(tribune.id, json_posts[i]);
@@ -149,7 +135,7 @@ Tribune.prototype.sort_posts = function(a, b) {
 Tribune.prototype.post = function(post, callback) {
   var tribune = this;
 
-  db.rpush('posts:' + this.id, '', function(err, post_id) {
+  global.db.rpush('posts:' + this.id, '', function(err, post_id) {
     // Now we know the post's id
     post.id = post_id;
 
@@ -159,10 +145,10 @@ Tribune.prototype.post = function(post, callback) {
     console.log(post);
 
     // Store posts preparsed in a few formats.
-    db.rpush('posts:' + tribune.id + ':json', JSON.stringify(post));
+    global.db.rpush('posts:' + tribune.id + ':json', JSON.stringify(post));
 
     // And a post:TRIBUNE_ID:POST_ID hash with the post values.
-    db.hmset('post:' + tribune.id + ':' + post.id, post);
+    global.db.hmset('post:' + tribune.id + ':' + post.id, post);
 
     console.log('Post ' + post.id + ' pushed to tribune ' + tribune.id);
 
