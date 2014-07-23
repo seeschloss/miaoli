@@ -25,7 +25,9 @@ if (process.env.VCAP_SERVICES) {
   db = redis.createClient(conf.port, conf.host);
   db.auth(conf.password);
 } else {
-  db = redis.createClient();
+  var redis_port = process.env.REDIS_PORT || 6379;
+  var redis_host = process.env.REDIS_HOST || "localhost";
+  db = redis.createClient(redis_port, redis_host);
 }
 
 var app = express();
