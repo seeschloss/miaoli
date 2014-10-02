@@ -97,7 +97,7 @@ Tribune.prototype.xml = function() {
     xml += ' <post id="' + post.data.id + '" time="' + post.tribune_timestamp() + '">\n';
     xml += '  <info>' + post.data.info + '</info>\n';
     xml += '  <login>' + (post.data.user != undefined ? post.data.user.name : '') + '</login>\n';
-    xml += '  <message>' + post.message_plain() + '</message>\n';
+    xml += '  <message>' + post.message_xml() + '</message>\n';
     xml += ' </post>\n';
   });
 

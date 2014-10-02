@@ -107,7 +107,40 @@ exports.Post.prototype.message_html = function() {
     return '';
   }
 };
+exports.Post.prototype.message_xml = function() {
+  if (this.data.message) {
+    var callback = function(match, tag, text) {
+      text = text.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
+      return '\032' + tag + '\033' + text + '\032/' + tag + '\033';
+    }
+    message = this.data.message.substr(0, 500);
+    message = message.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
 
+    message = message.replace(/&/g, '&amp;');
+    message = message.replace(/</g, '&lt;');
+    message = message.replace(/>/g, '&gt;');
+
+    message = message.replace(/\032/g, '<');
+    message = message.replace(/\033/g, '>');
+
+    message = message.replace(/((https?|ftp|gopher|file|mms|rtsp|rtmp):\/\/.*?)((,|\.|\)|\]|\})?(<| |-|"|\[:|$))/,
+      function(match, url, protocol, cruft, punctuation, after) {
+        var string = '<a href="' + url + '">[url]</a>';
+        if (undefined != punctuation) {
+          string += punctuation;
+        }
+        if (undefined != after) {
+          string += after;
+        }
+        return string;
+      }
+    );
+
+    return message;
+  } else {
+    return '';
+  }
+};
 exports.Post.prototype.message_plain = function() {
   return this.data.message;
 };
