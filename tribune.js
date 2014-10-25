@@ -2,7 +2,8 @@
 
 var redis = require("redis"),
     Post = require("./post.js").Post,
-    jade = require("jade");
+    jade = require("jade"),
+    async = require("async");
 
 exports.load = function(req, res, next) {
   var id = req.params.id;
@@ -21,48 +22,47 @@ exports.form_post = function(req, res, next) {
 
   console.log('New message for tribune ' + tribune.id + ":\n" + req.body.message);
 
-  tribune.post({
-    tribune: tribune.id,
-    message: req.body.message,
-    timestamp: Date.now(),
-    info: req.get('User-Agent')
-  }, function(tribune_id, post) {
-    if (undefined != exports.onNewPost) {
-      var rendered_post = jade.renderFile(
-        'views/post.jade',
-        { tribune: tribune, post: post },
-        function(err, str) {
-          if (!err) {
-            exports.onNewPost(tribune.id, str);
-            res.set('Content-Type', 'application/xml');
-            res.send(201, req.tribune.xml());
-          }
-        }
-      );
+  async.waterfall([
+    function(callback) {
+      tribune.post({
+        tribune: tribune.id,
+        message: req.body.message,
+        timestamp: Date.now(),
+        info: req.get('User-Agent')
+      }, callback);
+    },
+    function(post, callback) {
+      tribune.posts.push(post);
+      tribune.render_post(post, callback);
+    },
+    function(str, callback) {
+      exports.onNewPost(tribune.id, str);
+      callback(null);
     }
+  ], function(err, result) {
+    next();
   });
 };
 
 exports.direct_post = function(post_data) {
-  new Tribune(post_data.tribune, function(tribune) {
-    console.log('New message for tribune ' + tribune.id + ":\n" + post_data.message);
+  var tribune;
 
-    post_data.timestamp = Date.now();
-
-    tribune.post(post_data, function(tribune_id, post) {
-      if (undefined != exports.onNewPost) {
-        var rendered_post = jade.renderFile(
-          'views/post.jade',
-          { tribune: tribune, post: post },
-          function(err, str) {
-            if (!err) {
-              exports.onNewPost(tribune.id, str);
-            }
-          }
-        );
-      }
-    });
-  });
+  async.waterfall([
+    function(callback) {
+      tribune = new Tribune(post_data.tribune, callback);
+    },
+    function(tribune, callback) {
+      tribune.post(post_data, callback);
+    },
+    function(post, callback) {
+      tribune.posts.push(post);
+      tribune.render_post(post, callback);
+    },
+    function(str, callback) {
+      exports.onNewPost(tribune.id, str);
+      callback(null);
+    }
+  ]);
 };
 
 exports.xml = function(req, res, next) {
@@ -82,11 +82,24 @@ function Tribune(id, callback) {
   this.logout_url = "/tribune/" + this.id + "/logout";
   this.title = 'Tribune ' + this.id;
 
-  this.load_posts(this.max_posts, (function(tribune) {return function() {
+  var tribune = this;
+  this.load_posts(this.max_posts, function() {
     if (callback) {
-      callback(tribune);
+      callback(null, tribune);
     }
-  }})(this));
+  });
+};
+
+Tribune.prototype.render_post = function(post, callback) {
+  var rendered_post = jade.renderFile(
+    'views/post.jade',
+    { tribune: this, post: post },
+    function(err, str) {
+      if (callback) {
+        callback(err, str);
+      }
+    }
+  );
 };
 
 Tribune.prototype.xml = function() {
@@ -139,6 +152,10 @@ Tribune.prototype.post = function(post, callback) {
     // Now we know the post's id
     post.id = post_id;
 
+    if (!post.timestamp) {
+      post.timestamp = Date.now();
+    }
+
     post.message = post.message.substr(0, 500);
 
     console.log('... post id is ' + post.id);
@@ -152,7 +169,7 @@ Tribune.prototype.post = function(post, callback) {
 
     console.log('Post ' + post.id + ' pushed to tribune ' + tribune.id);
 
-    if (callback) {callback(tribune.id, new Post(tribune.id, post));}
+    if (callback) {callback(err, new Post(tribune.id, post));}
   });
 };
 

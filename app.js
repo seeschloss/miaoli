@@ -103,6 +103,7 @@ app.all('/tribune/:id/*', tribune.load);
 
 app.get('/tribune/:id', routes.tribune);
 app.post('/tribune/:id/post', tribune.form_post);
+app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml'); res.send(201, req.tribune.xml()); });
 app.get('/tribune/:id/xml', tribune.xml);
 app.post('/tribune/:id/login', passport.authenticate('local'), function (req, res) { res.redirect('/tribune/' + req.params.id); });
 app.get('/tribune/:id/logout', function (req, res) { req.logout(); res.redirect('/tribune/' + req.params.id); });
