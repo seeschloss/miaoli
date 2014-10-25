@@ -3,7 +3,8 @@
 var redis = require("redis"),
     Post = require("./post.js").Post,
     jade = require("jade"),
-    async = require("async");
+    async = require("async"),
+    Chance = require("chance");
 
 exports.load = function(req, res, next) {
   var id = req.params.id;
@@ -15,7 +16,8 @@ exports.create = function(name, callback) {
   var id = name;
 
   if (name == '<random>') {
-    id = Math.random();
+    var chance = new Chance();
+    id = chance.word({syllables: 3});
   } else {
     id = name.replace(/[\s\\\/:?&#]/g, '');
   }
