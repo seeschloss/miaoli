@@ -97,6 +97,7 @@ passport.deserializeUser(function(id, done) {
 
 
 app.get('/', routes.home);
+app.post('/', function(req, res) { tribune.create(req.body.name, function(err, tribune) {res.redirect(302, '/tribune/' + tribune.id);}); });
 
 app.all('/tribune/:id', tribune.load);
 app.all('/tribune/:id/*', tribune.load);

@@ -11,6 +11,18 @@ exports.load = function(req, res, next) {
   req.tribune = new Tribune(id, function() {next();});
 };
 
+exports.create = function(name, callback) {
+  var id = name;
+
+  if (name == '<random>') {
+    id = Math.random();
+  } else {
+    id = name.replace(/[\s\\\/:?&#]/g, '');
+  }
+
+  callback(null, new Tribune(id));
+};
+
 exports.form_post = function(req, res, next) {
   var tribune = req.tribune;
 
