@@ -114,10 +114,12 @@ Tribune.prototype.setup_contenteditable = function(div) {
       // Passes the text to the sanitizing
       // function, while trying to keep an
       // eye on the selection.
-      var html = this.innerHTML;
-      var sel = tribune.saveSelection(this);
-      this.innerHTML = sanitize(html);
-      tribune.restoreSelection(this, sel);
+      if (!e.isComposing) {
+        var html = this.innerHTML;
+        var sel = tribune.saveSelection(this);
+        this.innerHTML = sanitize(html);
+        tribune.restoreSelection(this, sel);
+      }
     },
   };
 
