@@ -55,145 +55,9 @@ Tribune.prototype.insert_post = function(post) {
   }
 };
 
-Tribune.prototype.setup_contenteditable = function(div) {
-  var tribune = this;
-
-  var events = {
-    keydown: function(e) {
-      this.beforeKeyDown = this.innerHTML;
-      // Enter doesn't seem to work with Firefox
-      // here so we're doing it on the keypress
-      // event
-      var code = e.which;
-      if (e.altKey) switch (code) {
-        case 66: // b
-          e.preventDefault();
-          tribune.wrap_selection_with_tag('b');
-          break;
-        case 73: // i
-          e.preventDefault();
-          tribune.wrap_selection_with_tag('i');
-          break;
-        case 83: // s
-          e.preventDefault();
-          tribune.wrap_selection_with_tag('s');
-          break;
-        case 85: // u
-          e.preventDefault();
-          tribune.wrap_selection_with_tag('u');
-          break;
-        default:
-          break;
-      }
-    },
-    keyup: function(e) {
-      // Doesn't seem to work with Firefox
-      // so the behaviour is replicated on
-      // the input event.
-      if (this.beforeKeyDown != this.innerHTML) {
-        var html = this.innerHTML;
-        var sel = tribune.saveSelection(this);
-        this.innerHTML = sanitize(html);
-        tribune.restoreSelection(this, sel);
-      }
-    },
-    keypress: function(e) {
-      // Prevents enter from inserting any
-      // <br>
-      var code = e.which;
-      switch (code) {
-        case 13: // enter
-          e.preventDefault();
-          var message = sanitize(this.innerHTML, false);
-          tribune.post(message, tribune.nickname(), 'Anonymous');
-          this.innerHTML = "";
-          break;
-      }
-    },
-    input: function(e) {
-      // Passes the text to the sanitizing
-      // function, while trying to keep an
-      // eye on the selection.
-      if (!e.isComposing) {
-        var html = this.innerHTML;
-        var sel = tribune.saveSelection(this);
-        this.innerHTML = sanitize(html);
-        tribune.restoreSelection(this, sel);
-      }
-    },
-  };
-
-  var sanitize = function(html, keep_tags) {
-    if (keep_tags === undefined) { keep_tags = true; }
-
-    html = html.replace(/&nbsp;/g, ' ');
-    html = html.replace(/  /g, '  ');
-
-    html = html.replace(/<[^>]*>/g, '');
-
-    if (keep_tags) {
-      var callback = function(match, tag, attributes, text) {
-        if (tag == 'span') {
-          return text;
-        } else {
-          text = text.replace(/&lt;(m|s|u|b|i|tt|code|span)([^&]*)&gt;(.*?)&lt;\/\1&gt;/g, callback);
-          return '<span class="tag">&lt;' + tag + '&gt;</span><' + tag + '>' + text + '</' + tag + '><span class="tag">&lt;/' + tag + '&gt;</span>';
-        }
-      };
-
-      html = html.replace(/&lt;(m|s|u|b|i|tt|code|span)([^&]*)&gt;(.*?)&lt;\/\1&gt;/g, callback);
-      html = html.replace(/\032/g, '<');
-      html = html.replace(/\033/g, '>');
-      html = html.replace(/ $/g, ' ');
-
-      html = html.replace(
-        //  |--------------------------------$1------------------------------|
-        //  ||-----------------------------$2------------------------------| | |---------------------------------------------$11---------------------------------------------|
-        //  ||           |--------$4-------| |--------------$7------------|| | ||---------$12---------|             |-----$16-----|                                          |
-        //  |||---$3---| ||--$5--| |--$6--|| ||--$8--| |----$9---| |-$10-||| | |||---$13----| |-$14--|| |----$15---|| |---$17----|| |---------$18----------| |-----$19-----| |
-           /((([0-9]{4})-((0[1-9])|(1[0-2]))-((0[1-9])|([12][0-9])|(3[01])))#)?((([01]?[0-9])|(2[0-3])):([0-5][0-9])(:([0-5][0-9]))?([:\^][0-9]|[¹²³⁴⁵⁶⁷⁸⁹])?(@[0-9A-Za-z]+)?)/g
-         , "<span class='clock-reference' data-timestamp='$3$4$7$12$15$17$18'>\$1\$11</span>"
-      );
-
-      html = html.replace(/((https?|ftp|gopher|file|mms|rtsp|rtmp):\/\/[^ ]*?)((,|\.|\)|\]|\})?(<| | |"|$))/g,
-        function(match, url, protocol, cruft, punctuation, after) {
-          var string = '<span class="url">' + url + '</span>';
-          if (undefined != punctuation) {
-            string += punctuation;
-          }
-          if (undefined != after) {
-            string += after;
-          }
-          return string;
-        }
-      );
-
-      html = html.replace(/\[:([^\]\/]+)\]/g, '<span class="totoz">[:\$1]</span>');
-    } else {
-      html = html.replace(/&lt;/g,  '<');
-      html = html.replace(/&gt;/g,  '>');
-      html = html.replace(/&amp;/g, '&');
-    }
-
-    return html;
-  };
-
-  div.onkeydown = events.keydown;
-  div.onkeyup = events.keyup;
-  div.onkeypress = events.keypress;
-  div.oninput = events.input;
-  div.onblur = events.blur;
-
-  this.dom.querySelector('form').onsubmit = function(e) {
-    e.preventDefault();
-    var message = sanitize(div.innerHTML, false);
-    tribune.post(message, tribune.nickname(), 'Anonymous');
-    div.innerHTML = "";
-    return false;
-  };
-};
-
 Tribune.prototype.setup_inputs = function() {
+  var self = this;
+
   var inputs = this.dom.querySelectorAll('input.message-input');
   for (var i = 0; i < inputs.length; i++) {
     // There should only be one, but just in case.
@@ -204,7 +68,16 @@ Tribune.prototype.setup_inputs = function() {
     div.className = 'message';
     this.message_div = div;
 
-    this.setup_contenteditable(div);
+    var puli = new Puli(div);
+    puli.onsubmit = function(text) {
+        self.post(text, tribune.nickname(), 'Anonymous');
+    };
+
+    div.ownerDocument.querySelector('form').onsubmit = function(e) {
+      e.preventDefault();
+      tribune.post(puli.text(), tribune.nickname(), 'Anonymous');
+      puli.clear();
+    };
 
     input.parentNode.replaceChild(div, input);
   }
@@ -281,37 +154,6 @@ Tribune.prototype.reset_highlight = function() {
   }
 };
 
-Tribune.prototype.wrap_selection_with_tag = function(tag) {
-  var selection;
-  var elements = [];
-  var ranges = [];
-  var rangeCount = 0;
-  var frag;
-  var lastChild;
-  if (window.getSelection && document.activeElement == this.message_div) {
-    selection = window.getSelection();
-    if (selection.rangeCount) {
-      var i = selection.rangeCount;
-      while (i--) {
-        ranges[i] = selection.getRangeAt(i).cloneRange();
-        elements[i] = document.createElement(tag);
-        var contents = ranges[i].extractContents();
-        contents.textContent = '<' + tag + '>' + contents.textContent + '</' + tag + '>';
-        elements[i].appendChild(contents);
-        ranges[i].insertNode(elements[i]);
-        ranges[i].selectNode(elements[i]);
-      }
-
-      // Restore ranges
-      selection.removeAllRanges();
-      i = ranges.length;
-      while (i--) {
-        selection.addRange(ranges[i]);
-      }
-    }
-  }
-}
-
 Tribune.prototype.insert_element_in_message = function(element) {
     var sel, range, html;
     if (element.ownerDocument.getSelection) {
@@ -357,82 +199,6 @@ Tribune.prototype.insert_reference = function(clock) {
 Tribune.prototype.new_post = function(post) {
   this.insert_post(post);
 };
-
-if (window.getSelection && document.createRange) {
-  Tribune.prototype.saveSelection = function(containerEl) {
-    var sel = containerEl.ownerDocument.getSelection();
-    if (sel.type == 'None') {
-      return {
-        start: 0,
-        end: 0
-      };
-    }
-
-    var range = containerEl.ownerDocument.getSelection().getRangeAt(0);
-    var preSelectionRange = range.cloneRange();
-    preSelectionRange.selectNodeContents(containerEl);
-    preSelectionRange.setEnd(range.startContainer, range.startOffset);
-    var start = preSelectionRange.toString().length;
-
-    return {
-      start: start,
-      end: start + range.toString().length
-    };
-  };
-
-  Tribune.prototype.restoreSelection = function(containerEl, savedSel) {
-    var charIndex = 0, range = containerEl.ownerDocument.createRange();
-    range.setStart(containerEl, 0);
-    range.collapse(true);
-    var nodeStack = [containerEl], node, foundStart = false, stop = false;
-
-    while (!stop && (node = nodeStack.pop())) {
-      if (node.nodeType == 3) {
-        var nextCharIndex = charIndex + node.length;
-        if (!foundStart && savedSel.start >= charIndex && savedSel.start <= nextCharIndex) {
-          range.setStart(node, savedSel.start - charIndex);
-          foundStart = true;
-        }
-        if (foundStart && savedSel.end >= charIndex && savedSel.end <= nextCharIndex) {
-          range.setEnd(node, savedSel.end - charIndex);
-          stop = true;
-        }
-        charIndex = nextCharIndex;
-      } else {
-        var i = node.childNodes.length;
-        while (i--) {
-          nodeStack.push(node.childNodes[i]);
-        }
-      }
-    }
-
-    var sel = containerEl.ownerDocument.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-  }
-} else if (document.selection) {
-  Tribune.prototype.saveSelection = function(containerEl) {
-    var selectedTextRange = containerEl.ownerDocument.selection.createRange();
-    var preSelectionTextRange = containerEl.ownerDocument.body.createTextRange();
-    preSelectionTextRange.moveToElementText(containerEl);
-    preSelectionTextRange.setEndPoint("EndToStart", selectedTextRange);
-    var start = preSelectionTextRange.text.length;
-
-    return {
-      start: start,
-      end: start + selectedTextRange.text.length
-    }
-  };
-
-  Tribune.prototype.restoreSelection = function(containerEl, savedSel) {
-    var textRange = containerEl.ownerDocument.body.createTextRange();
-    textRange.moveToElementText(containerEl);
-    textRange.collapse(true);
-    textRange.moveEnd("character", savedSel.end);
-    textRange.moveStart("character", savedSel.start);
-    textRange.select();
-  };
-}
 
 var element = document.querySelector('.tribune');
 
