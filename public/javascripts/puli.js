@@ -226,24 +226,35 @@ if (window.getSelection && document.createRange) {
 }
 
 Puli.prototype.wrap_selection_with_tag = function(tag) {
-  var selection;
-  var elements = [];
   var ranges = [];
-  var rangeCount = 0;
-  var frag;
-  var lastChild;
+
   if (window.getSelection && document.activeElement == this.div) {
-    selection = window.getSelection();
+    var selection = window.getSelection();
     if (selection.rangeCount) {
       var i = selection.rangeCount;
       while (i--) {
-        ranges[i] = selection.getRangeAt(i).cloneRange();
-        elements[i] = document.createElement(tag);
-        var contents = ranges[i].extractContents();
-        contents.textContent = '<' + tag + '>' + contents.textContent + '</' + tag + '>';
-        elements[i].appendChild(contents);
-        ranges[i].insertNode(elements[i]);
-        ranges[i].selectNode(elements[i]);
+        var range = selection.getRangeAt(i).cloneRange();
+        var element = document.createElement('span');
+
+        var span_before = document.createElement('span');
+        span_before.textContent = '<' + tag + '>';
+        span_before.className = 'tag';
+
+        var span = document.createElement('span');
+        span.textContent = range.extractContents().textContent;
+
+        var span_after = document.createElement('span');
+        span_after.textContent = '</' + tag + '>';
+        span_after.className = 'tag';
+
+        element.appendChild(span_before);
+        element.appendChild(span);
+        element.appendChild(span_after);
+
+        range.insertNode(element);
+        range.selectNode(span);
+
+        ranges.push(range);
       }
 
       // Restore ranges
