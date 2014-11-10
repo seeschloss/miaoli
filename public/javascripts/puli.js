@@ -7,6 +7,13 @@ var Puli = function(div) {
 
 	this.onkeypress = function(text) {
 	};
+
+	this.shortcuts = {
+		66: {tag: 'b'},
+		73: {tag: 'i'},
+		83: {tag: 's'},
+		85: {tag: 'u'},
+	};
 };
 
 Puli.prototype.setup = function() {
@@ -18,25 +25,23 @@ Puli.prototype.setup = function() {
       // here so we're doing it on the keypress
       // event
       var code = e.which;
-      if (e.altKey) switch (code) {
-        case 66: // b
-          e.preventDefault();
-          self.wrapSelectionWithTag('b');
-          break;
-        case 73: // i
-          e.preventDefault();
-          self.wrapSelectionWithTag('i');
-          break;
-        case 83: // s
-          e.preventDefault();
-          self.wrapSelectionWithTag('s');
-          break;
-        case 85: // u
-          e.preventDefault();
-          self.wrapSelectionWithTag('u');
-          break;
-        default:
-          break;
+      if (e.altKey && code in self.shortcuts) {
+          var shortcut = self.shortcuts[code];
+
+          if ('pre' in shortcut) {
+              e.preventDefault();
+              self.prefixSelectionWithText(shortcut.pre);
+          }
+
+          if ('tag' in shortcut) {
+              e.preventDefault();
+              self.wrapSelectionWithTag(shortcut.tag);
+          }
+
+          if ('post' in shortcut) {
+              e.preventDefault();
+              self.postfixSelectionWithText(shortcut.post);
+          }
       }
     },
     keyup: function(e) {
@@ -265,5 +270,79 @@ Puli.prototype.wrapSelectionWithTag = function(tag) {
       }
     }
   }
-}
+};
+
+Puli.prototype.prefixSelectionWithText = function(text) {
+  var ranges = [];
+
+  if (window.getSelection && document.activeElement == this.div) {
+    var selection = window.getSelection();
+    if (selection.rangeCount) {
+      var i = selection.rangeCount;
+      while (i--) {
+        var range = selection.getRangeAt(i).cloneRange();
+        var element = document.createElement('span');
+
+        var span_before = document.createElement('span');
+        span_before.textContent = text;
+        span_before.className = 'tag';
+
+        var span = document.createElement('span');
+        span.textContent = range.extractContents().textContent;
+
+        element.appendChild(span_before);
+        element.appendChild(span);
+
+        range.insertNode(element);
+        range.selectNode(span);
+
+        ranges.push(range);
+      }
+
+      // Restore ranges
+      selection.removeAllRanges();
+      i = ranges.length;
+      while (i--) {
+        selection.addRange(ranges[i]);
+      }
+    }
+  }
+};
+
+Puli.prototype.postfixSelectionWithText = function(text) {
+  var ranges = [];
+
+  if (window.getSelection && document.activeElement == this.div) {
+    var selection = window.getSelection();
+    if (selection.rangeCount) {
+      var i = selection.rangeCount;
+      while (i--) {
+        var range = selection.getRangeAt(i).cloneRange();
+        var element = document.createElement('span');
+
+        var span = document.createElement('span');
+        span.textContent = range.extractContents().textContent;
+
+        var span_after = document.createElement('span');
+        span_after.textContent = text;
+        span_after.className = 'tag';
+
+        element.appendChild(span);
+        element.appendChild(span_after);
+
+        range.insertNode(element);
+        range.selectNode(span);
+
+        ranges.push(range);
+      }
+
+      // Restore ranges
+      selection.removeAllRanges();
+      i = ranges.length;
+      while (i--) {
+        selection.addRange(ranges[i]);
+      }
+    }
+  }
+};
 
