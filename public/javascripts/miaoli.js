@@ -72,6 +72,7 @@ Tribune.prototype.setup_inputs = function() {
     puli.onsubmit = function(text) {
         self.post(text, tribune.nickname(), 'Anonymous');
     };
+    puli.shortcuts[77] = {pre: '====><b> Moment ', post: '</b> <===='};
 
     div.ownerDocument.querySelector('form').onsubmit = function(e) {
       e.preventDefault();
