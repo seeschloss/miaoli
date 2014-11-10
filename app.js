@@ -14,19 +14,9 @@ var express = require('express')
   , GoogleStrategy = require('passport-google').Strategy
   , path = require('path');
 
-// This is for AppFog. If not there, we'll just use
-// a local redis instance.
-if (process.env.VCAP_SERVICES) {
-  var conf = JSON.parse(process.env.VCAP_SERVICES);
-  for (first in conf) break;
-  conf = conf[first];
-  global.db = redis.createClient(conf.port, conf.host);
-  global.db.auth(conf.password);
-} else {
-  var redis_port = process.env.REDIS_PORT || 6379;
-  var redis_host = process.env.REDIS_HOST || "localhost";
-  global.db = redis.createClient(redis_port, redis_host);
-}
+var redis_port = process.env.REDIS_PORT || 6379;
+var redis_host = process.env.REDIS_HOST || "localhost";
+global.db = redis.createClient(redis_port, redis_host);
 
 var app = express();
 var server = http.createServer(app);
