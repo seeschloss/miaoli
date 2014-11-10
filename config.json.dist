@@ -1,0 +1,15 @@
+{
+	"development": {
+		"port": 3000,
+		"secret": "session-secret",
+		"redis": {
+			"port": 6379,
+			"host": "localhost"
+		},
+		"google": {
+			"clientID": "1789...1407.apps.googleusercontent.com",
+			"clientSecret": "14r...rEv",
+			"callbackURL": "http://PUBLIC-URL/auth/google/return"
+		}
+	}
+}

@@ -14,15 +14,16 @@ var express = require('express')
   , GoogleStrategy = require('passport-google').Strategy
   , path = require('path');
 
-var redis_port = process.env.REDIS_PORT || 6379;
-var redis_host = process.env.REDIS_HOST || "localhost";
-global.db = redis.createClient(redis_port, redis_host);
+var env = process.env.NODE_ENV || 'development';
+var config = require('./config.json')[env];
+
+global.db = redis.createClient(config.redis.port, config.redis.host);
 
 var app = express();
 var server = http.createServer(app);
 
 // all environments
-app.set('port', process.env.PORT || 3000);
+app.set('port', config.port);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.use(express.favicon());
@@ -30,14 +31,14 @@ app.use(express.logger('dev'));
 app.use(express.cookieParser());
 app.use(express.bodyParser());
 //app.use(express.methodOverride());
-app.use(express.session({ secret: 'plop' }));
+app.use(express.session({ secret: config.secret }));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // development only
-if ('development' == app.get('env')) {
+if ('development' == env) {
   app.use(express.errorHandler());
 }
 
