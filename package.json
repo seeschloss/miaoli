@@ -13,7 +13,7 @@
     "async": "0.9.0",
     "passport": "0.1.17",
     "passport-local": "*",
-    "passport-google": "*",
+    "passport-google-oauth": "*",
     "jade": "*",
     "redis": "*",
     "chance": "0.6.1"

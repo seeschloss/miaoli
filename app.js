@@ -11,7 +11,7 @@ var express = require('express')
   , io = require('socket.io')
   , passport = require('passport')
   , LocalStrategy = require('passport-local').Strategy
-  , GoogleStrategy = require('passport-google').Strategy
+  , GoogleStrategy = require('passport-google-oauth').OAuth2Strategy
   , path = require('path');
 
 var env = process.env.NODE_ENV || 'development';
@@ -61,13 +61,13 @@ passport.use(new LocalStrategy({
 ));
 
 passport.use(new GoogleStrategy({
-    returnURL: 'http://aenea.seos.fr:3000/auth/google/return',
-    realm: 'http://aenea.seos.fr:3000'
+    clientID: config.google.clientID,
+    clientSecret: config.google.clientSecret,
+    callbackURL: config.google.callbackURL
   },
-  function(identifier, profile, done) {
-    global.db.hmset('user:google:' + identifier, profile, function() {
-      profile.id = 'user:google:' + identifier;
-      done(null, profile);
+  function(accessToken, refreshToken, profile, done) {
+    global.db.hmset('user:google:' + profile.id, profile, function() {
+      return done(null, profile);
     });
   }
 ));
@@ -79,9 +79,7 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(id, done) {
   console.log("Deserialize " + id);
-  global.db.hgetall(id, function(err, data) {
-    console.log(data);
-    console.log(err);
+  global.db.hgetall('user:google:' + id, function(err, data) {
     done(null, data);
   });
 });
@@ -100,7 +98,7 @@ app.get('/tribune/:id/xml', tribune.xml);
 app.post('/tribune/:id/login', passport.authenticate('local'), function (req, res) { res.redirect('/tribune/' + req.params.id); });
 app.get('/tribune/:id/logout', function (req, res) { req.logout(); res.redirect('/tribune/' + req.params.id); });
 
-app.get('/auth/google', passport.authenticate('google'));
+app.get('/auth/google', passport.authenticate('google', { scope: 'profile' }));
 app.get('/auth/google/return', passport.authenticate('google', { successRedirect: '/', failureRedirect: '/login' }));
 
 io = io.listen(server);
