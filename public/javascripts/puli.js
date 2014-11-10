@@ -21,19 +21,19 @@ Puli.prototype.setup = function() {
       if (e.altKey) switch (code) {
         case 66: // b
           e.preventDefault();
-          self.wrap_selection_with_tag('b');
+          self.wrapSelectionWithTag('b');
           break;
         case 73: // i
           e.preventDefault();
-          self.wrap_selection_with_tag('i');
+          self.wrapSelectionWithTag('i');
           break;
         case 83: // s
           e.preventDefault();
-          self.wrap_selection_with_tag('s');
+          self.wrapSelectionWithTag('s');
           break;
         case 85: // u
           e.preventDefault();
-          self.wrap_selection_with_tag('u');
+          self.wrapSelectionWithTag('u');
           break;
         default:
           break;
@@ -225,7 +225,7 @@ if (window.getSelection && document.createRange) {
   };
 }
 
-Puli.prototype.wrap_selection_with_tag = function(tag) {
+Puli.prototype.wrapSelectionWithTag = function(tag) {
   var ranges = [];
 
   if (window.getSelection && document.activeElement == this.div) {
