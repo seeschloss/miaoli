@@ -92,7 +92,8 @@ function Tribune(id, callback) {
   this.max_posts = 20;
 
   this.post_url = "/tribune/" + this.id + "/post";
-  this.login_url = "/tribune/" + this.id + "/login";
+  this.local_login_url = "/tribune/" + this.id + "/auth/local";
+  this.google_login_url = "/tribune/" + this.id + "/auth/google";
   this.logout_url = "/tribune/" + this.id + "/logout";
   this.title = 'Tribune ' + this.id;
 

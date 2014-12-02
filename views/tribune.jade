@@ -26,4 +26,5 @@ block content
         input(type="password",name="password",placeholder="Password")
         input(type="submit",value="Login")
     else
+      p Logged in as <span class="login">#{user.displayName}</span> (<span class="provider">#{user.providerLabel}</span>)
       a.logout(href=tribune.logout_url) Logout

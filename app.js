@@ -53,9 +53,10 @@ passport.use(new LocalStrategy({
       pass: password
     };
 
-    global.db.hmset('user:local:' + username, profile, function() {
-      profile.id = 'user:local:' + username;
-      done(null, profile);
+    profile.miaoliId = 'local:' + username;
+    profile.providerLabel = "Miaoli";
+    global.db.hmset('user:' + profile.miaoliId, profile, function() {
+      return done(null, profile);
     });
   }
 ));
@@ -66,20 +67,22 @@ passport.use(new GoogleStrategy({
     callbackURL: config.google.callbackURL
   },
   function(accessToken, refreshToken, profile, done) {
-    global.db.hmset('user:google:' + profile.id, profile, function() {
+    profile.miaoliId = "google:" + profile.id;
+    profile.providerLabel = "Google";
+    global.db.hmset('user:' + profile.miaoliId, profile, function() {
       return done(null, profile);
     });
   }
 ));
 
 passport.serializeUser(function(user, done) {
-  console.log("Serialize " + user.id);
-  done(null, user.id);
+  console.log("Serialize " + user.miaoliId);
+  done(null, user.miaoliId);
 });
 
-passport.deserializeUser(function(id, done) {
-  console.log("Deserialize " + id);
-  global.db.hgetall('user:google:' + id, function(err, data) {
+passport.deserializeUser(function(miaoliId, done) {
+  console.log("Deserialize " + miaoliId);
+  global.db.hgetall("user:" + miaoliId, function(err, data) {
     done(null, data);
   });
 });
@@ -95,11 +98,18 @@ app.get('/tribune/:id', routes.tribune);
 app.post('/tribune/:id/post', tribune.form_post);
 app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml'); res.send(201, req.tribune.xml()); });
 app.get('/tribune/:id/xml', tribune.xml);
-app.post('/tribune/:id/login', passport.authenticate('local'), function (req, res) { res.redirect('/tribune/' + req.params.id); });
 app.get('/tribune/:id/logout', function (req, res) { req.logout(); res.redirect('/tribune/' + req.params.id); });
 
-app.get('/auth/google', passport.authenticate('google', { scope: 'profile' }));
-app.get('/auth/google/return', passport.authenticate('google', { successRedirect: '/', failureRedirect: '/login' }));
+app.post('/tribune/:id/auth/local', passport.authenticate('local'), function (req, res) { res.redirect('/tribune/' + req.params.id); });
+
+app.get('/tribune/:id/auth/google', function(req, res) { return passport.authenticate('google', { scope: 'profile', state: req.params.id })(req, res); });
+app.get('/auth/google/return', passport.authenticate('google'), function(req, res) {
+  if ("state" in req.query) {
+    res.redirect('/tribune/' + req.query.state);
+  } else {
+    res.redirect('/');
+  }
+});
 
 io = io.listen(server);
 
