@@ -18,3 +18,5 @@ npm-debug.log
 manifest.yml
 
 node_modules
+
+config.json
