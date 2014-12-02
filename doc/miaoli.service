@@ -1,0 +1,13 @@
+[Unit]
+Description=Miaoli tribune
+
+[Service]
+ExecStart=/usr/bin/node /usr/local/src/miaoli/app.js
+WorkingDirectory=/usr/local/src/miaoli
+ReadOnlyDirectories=/
+Restart=always
+User=nobody
+Group=nobody
+
+[Install]
+WantedBy=multi-user.target
