@@ -1,29 +1,29 @@
 extends layout
 
 block content
-  div.tribune(data-tribune-id=tribune.id)(data-max-posts=tribune.max_posts)
+  div.tribune(data-tribune-id=tribune.id,data-max-posts=tribune.max_posts)
     h1= title
     ol.posts
       each post in tribune.posts
         include post
 
-    form(action=tribune.post_url)(method="post")
+    form(action=tribune.post_url,method="post")
       if user
-        input(type="text")(name="nickname")(value=user.displayName)(disabled="disabled")(readonly="readonly")(placeholder="Nickname")
-        input(class="message-input")(type="text")(name="message")(placeholder="Your message")
-        input(type="submit")(value="⏎")
+        input(type="text",name="nickname",value=user.displayName,disabled="disabled",readonly="readonly",placeholder="Nickname")
+        input(class="message-input",type="text",name="message",placeholder="Your message")
+        input(type="submit",value="⏎")
       else if tribune.anonymous
-        input(type="text")(name="nickname")(placeholder="Nickname")
-        input(class="message-input")(type="text")(name="message")(placeholder="Your message")
-        input(type="submit")(value="⏎")
+        input(type="text",name="nickname",placeholder="Nickname")
+        input(class="message-input",type="text",name="message",placeholder="Your message")
+        input(type="submit",value="⏎")
       else
         span.please Please login to participate.
 
     if !user
-      a.login.google(href="/auth/google") Login with Google
-      form(action=tribune.login_url)(method="post")
-        input(type="text")(name="username")(placeholder="Login")
-        input(type="password")(name="password")(placeholder="Password")
-        input(type="submit")(value="Login")
+      a.login.google(href=tribune.google_login_url) Login with Google
+      form(action=tribune.local_login_url,method="post")
+        input(type="text",name="username",placeholder="Login")
+        input(type="password",name="password",placeholder="Password")
+        input(type="submit",value="Login")
     else
       a.logout(href=tribune.logout_url) Logout
