@@ -82,8 +82,14 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(miaoliId, done) {
   console.log("Deserialize " + miaoliId);
-  global.db.hgetall("user:" + miaoliId, function(err, data) {
-    done(null, data);
+  global.db.hgetall("user:" + miaoliId, function(err, user) {
+    user.tribunes = [];
+    global.db.lrange("user:" + miaoliId + ":tribunes", 0, -1, function(err, tribune_ids) {
+      if (tribune_ids) tribune_ids.forEach(function(tribune_id) {
+        user.tribunes.push(new tribune.Tribune(tribune_id));
+      });
+      done(null, user);
+    });
   });
 });
 
@@ -94,17 +100,22 @@ app.post('/', function(req, res) { tribune.create(req.body.name, function(err, t
 app.all('/tribune/:id', tribune.load);
 app.all('/tribune/:id/*', tribune.load);
 
+app.get('/user', routes.user_home);
 app.get('/tribune/:id', routes.tribune);
 app.post('/tribune/:id/post', tribune.form_post);
 app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml'); res.send(201, req.tribune.xml()); });
 app.get('/tribune/:id/xml', tribune.xml);
+
+app.get('/auth/logout', function (req, res) { req.logout(); res.redirect('/'); });
 app.get('/tribune/:id/logout', function (req, res) { req.logout(); res.redirect('/tribune/' + req.params.id); });
 
+app.post('/auth/local', passport.authenticate('local'), function (req, res) { res.redirect('/'); });
 app.post('/tribune/:id/auth/local', passport.authenticate('local'), function (req, res) { res.redirect('/tribune/' + req.params.id); });
 
+app.get('/auth/google', function(req, res) { return passport.authenticate('google', { scope: 'profile', state: null })(req, res); });
 app.get('/tribune/:id/auth/google', function(req, res) { return passport.authenticate('google', { scope: 'profile', state: req.params.id })(req, res); });
 app.get('/auth/google/return', passport.authenticate('google'), function(req, res) {
-  if ("state" in req.query) {
+  if ("state" in req.query && req.query.state) {
     res.redirect('/tribune/' + req.query.state);
   } else {
     res.redirect('/');

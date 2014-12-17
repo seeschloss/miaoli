@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  h1 Hello, #{user.displayName}
+  if user.tribunes
+    h2 Your tribunes
+    ul#tribunes
+      each tribune in user.tribunes
+        li
+          a(href=tribune.url)= tribune.id
+  else
+    h2 You don't have any tribune yet
+    +tribune_create

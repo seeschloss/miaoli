@@ -1,9 +1,28 @@
+include login.jade
+
+mixin tribune_create
+  p Create a tribune
+  form(method='post') with a 
+    button(type='submit', name='name', value='<random>') random name
+  form(method='post') or called 
+    input(name='name', placeholder='whatever')
+    button(type='submit') ⏎
+
+
 doctype html
 html
   head
     title= title
     link(rel='stylesheet', href='/stylesheets/style.css')
   body
+    h1#title
+        a(href='/') Miaoli
+    block controls
+      ul#controls
+        li#user
+          +login
+        li#logout
+          +logout
     block content
     script(type='text/javascript', src='/socket.io/socket.io.js')
     script(type='text/javascript', src='/javascripts/puli.js')

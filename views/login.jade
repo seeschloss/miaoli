@@ -1,0 +1,13 @@
+mixin login
+  if user
+    p <a href='/user' class="login">#{user.displayName}</a> (<span class="provider">#{user.providerLabel}</span>)
+  else
+    a.login.google(href='/auth/google') Login with Google
+    form(action='/auth/local',method="post")
+      input(type="text",name="username",placeholder="Login")
+      input(type="password",name="password",placeholder="Password")
+      input(type="submit",value="Login")
+
+mixin logout
+  if user
+    a.logout(href='/auth/logout') Logout

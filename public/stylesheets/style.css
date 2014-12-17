@@ -1,12 +1,33 @@
 /* vim:et ts=2 sw=2
  */
 body {
-  padding: 50px;
+  padding: 20px 50px 50px 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
 a {
   color: #00B7FF;
+}
+
+h1#title {
+  margin: 0;
+  font-size: 300%;
+}
+
+h1#title a {
+  text-decoration: none;
+}
+
+#controls {
+  margin: 0;
+  list-style-type: none;
+  white-space: nowrap;
+  text-align: right;
+}
+
+#controls li {
+  display: inline-block;
+  margin: 1ex;
 }
 
 .totoz {

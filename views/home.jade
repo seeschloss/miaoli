@@ -2,9 +2,4 @@ extends layout
 
 block content
   h1 Tribune
-  p Create a new tribune...
-  form(method='post') with a 
-    button(type='submit', name='name', value='<random>') random name
-  form(method='post') or called 
-    input(name='name', placeholder='whatever')
-    button(type='submit') ⏎
+  +tribune_create

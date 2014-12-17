@@ -7,9 +7,19 @@ var redis = require("redis"),
     Chance = require("chance");
 
 exports.load = function(req, res, next) {
-  var id = req.params.id;
+  var id = req.params.id.replace(/:/g, '');
 
-  req.tribune = new Tribune(id, function() {next();});
+  req.tribune = new Tribune(id, function(err, tribune) {
+    if (tribune.admin === null && tribune.posts.length == 0 && req.user) {
+      tribune.admin = req.user.miaoliId;
+
+      req.user.tribunes.push(tribune.id);
+      global.db.lpush('user:' + tribune.admin + ':tribunes', tribune.id);
+      global.db.set('tribune:' + tribune.id + ':admin', tribune.admin, function(err) {next();});
+    } else {
+      next();
+    }
+  });
 };
 
 exports.create = function(name, callback) {
@@ -88,9 +98,11 @@ function Tribune(id, callback) {
   this.id = id;
   this.anonymous = true;
   this.posts = [];
+  this.admin = null;
 
   this.max_posts = 20;
 
+  this.url = "/tribune/" + this.id;
   this.post_url = "/tribune/" + this.id + "/post";
   this.local_login_url = "/tribune/" + this.id + "/auth/local";
   this.google_login_url = "/tribune/" + this.id + "/auth/google";
@@ -98,10 +110,34 @@ function Tribune(id, callback) {
   this.title = 'Tribune ' + this.id;
 
   var tribune = this;
-  this.load_posts(this.max_posts, function() {
+  this.load(function(err, posts) {
     if (callback) {
       callback(null, tribune);
     }
+  });
+};
+
+Tribune.prototype.load = function(callback) {
+  var tribune = this;
+
+  async.waterfall([
+    function(callback) {
+      tribune.load_admin(callback);
+    },
+    function(admin, callback) {
+      tribune.load_posts(tribune.max_posts, callback);
+    }
+  ], function(err, posts) {
+    callback(err, tribune);
+  });
+};
+
+Tribune.prototype.load_admin = function(callback) {
+  var tribune = this;
+
+  global.db.get('tribune:' + this.id + ':admin', function(err, admin) {
+    tribune.admin = admin;
+    callback(err, admin);
   });
 };
 
@@ -151,7 +187,7 @@ Tribune.prototype.load_posts = function(n, callback) {
     tribune.posts = tribune.posts.sort(tribune.sort_posts);
 
     if (callback) {
-      callback();
+      callback(null, tribune.posts);
     }
   }})(this));
 };
@@ -188,4 +224,5 @@ Tribune.prototype.post = function(post, callback) {
   });
 };
 
+exports.Tribune = Tribune;
 
