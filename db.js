@@ -6,6 +6,9 @@ var redis = require("redis")
 
 function MiaoliDB(config) {
   this.redis = redis.createClient(config.redis.port, config.redis.host);
+
+  this._users = {};
+  this._tribunes = {};
 }
 
 MiaoliDB.prototype.saveUser = function(user, callback) {
@@ -15,9 +18,17 @@ MiaoliDB.prototype.saveUser = function(user, callback) {
 };
 
 MiaoliDB.prototype.loadUser = function(miaoliId, callback) {
+  if (miaoliId in this._users) {
+    return callback(null, this._users[miaoliId]);
+  }
+
   var db = this;
 
+  console.log("Loading user " + miaoliId);
+
   this.redis.hgetall("user:" + miaoliId, function(err, user) {
+    db._users[miaoliId] = user;
+
     db.loadUserOwnedTribunes(user, function(err, tribunes) {
       user.tribunes = tribunes;
 
@@ -53,7 +64,14 @@ MiaoliDB.prototype.addUserOwnedTribune = function(user, tribune, callback) {
 };
 
 MiaoliDB.prototype.loadTribune = function(tribuneId, callback) {
+  if (tribuneId in this._tribunes) {
+    console.log(this._tribunes[tribuneId]);
+    return callback(null, this._tribunes[tribuneId]);
+  }
+
   var db = this;
+
+  console.log("Loading user " + tribuneId);
 
   this.redis.hgetall("tribune:" + tribuneId, function(err, tribune) {
     if (!tribune) {
@@ -61,6 +79,8 @@ MiaoliDB.prototype.loadTribune = function(tribuneId, callback) {
     }
 
     tribune.id = tribuneId;
+
+    db._tribunes[tribuneId] = tribune;
 
     db.loadTribunePosts(tribune, 20, function(err, posts) {
       tribune.posts = posts;

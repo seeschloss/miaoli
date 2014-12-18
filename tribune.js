@@ -8,7 +8,9 @@ var Post = require("./post.js").Post,
 exports.load = function(req, res, next) {
   var id = req.params.id.replace(/:/g, '');
 
-  req.tribune = new Tribune(id, function(err, tribune) {
+  new Tribune(id, function(err, tribune) {
+    req.tribune = tribune;
+
     if (tribune.admin === null && tribune.posts.length == 0 && req.user) {
       global.db.addUserOwnedTribune(req.user, tribune, function(err) {next();});
     } else {

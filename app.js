@@ -4,6 +4,8 @@
  */
 
 var express = require('express')
+  , session = require('express-session')
+  , RedisStore = require('connect-redis')(session)
   , routes = require('./routes/router')
   , http = require('http')
   , tribune = require('./tribune')
@@ -31,7 +33,14 @@ app.use(express.logger('dev'));
 app.use(express.cookieParser());
 app.use(express.bodyParser());
 //app.use(express.methodOverride());
-app.use(express.session({ secret: config.secret }));
+app.use(express.session({
+  secret: config.secret,
+  store: new RedisStore({
+    'host': config.redis.host,
+    'port': config.redis.port,
+    'prefix': 'session'
+  })
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(app.router);
@@ -94,6 +103,7 @@ app.all('/tribune/:id/*', tribune.load);
 
 app.get('/user', routes.user_home);
 app.get('/tribune/:id', routes.tribune);
+app.get('/tribune/:id/config', routes.tribune_config);
 app.post('/tribune/:id/post', tribune.form_post);
 app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml'); res.send(201, req.tribune.xml()); });
 app.get('/tribune/:id/xml', tribune.xml);

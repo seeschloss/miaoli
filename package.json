@@ -9,6 +9,7 @@
     "date-fu": "0.4.2",
     "timezone-js": "0.4.5",
     "express": "3.2.6",
+    "express-session": "1.9.3",
     "socket.io": "0.9.16",
     "async": "0.9.0",
     "passport": "0.1.17",
@@ -16,6 +17,7 @@
     "passport-google-oauth": "*",
     "jade": "*",
     "redis": "*",
+    "connect-redis": "2.1.0",
     "chance": "0.6.1"
   }
 }
