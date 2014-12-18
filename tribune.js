@@ -107,6 +107,8 @@ function Tribune(id, callback) {
   this.logout_url = "/tribune/" + this.id + "/logout";
   this.title = 'Tribune ' + this.id;
 
+  this.require_user_authentication = false;
+
   var tribune = this;
 
   this.load(callback);
@@ -126,6 +128,24 @@ Tribune.prototype.load = function(callback) {
       callback(err, tribune);
     }
   });
+};
+
+Tribune.prototype.save = function(callback) {
+  global.db.saveTribune(this, callback);
+};
+
+Tribune.prototype.configFromPost = function(params, callback) {
+  if ('title' in params) {
+    this.title = params['title'];
+  }
+
+  if ('require_user_authentication' in params) {
+    this.require_user_authentication = true;
+  } else {
+    this.require_user_authentication = false;
+  }
+
+  this.save(callback);
 };
 
 Tribune.prototype.render_post = function(post, callback) {

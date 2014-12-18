@@ -103,7 +103,15 @@ app.all('/tribune/:id/*', tribune.load);
 
 app.get('/user', routes.user_home);
 app.get('/tribune/:id', routes.tribune);
+
 app.get('/tribune/:id/config', routes.tribune_config);
+app.post('/tribune/:id/config', function(req, res) {
+  if (req.user === req.tribune.admin) {
+    req.tribune.configFromPost(req.body, function() {});
+  };
+  res.redirect(302, '/tribune/' + req.tribune.id);
+});
+
 app.post('/tribune/:id/post', tribune.form_post);
 app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml'); res.send(201, req.tribune.xml()); });
 app.get('/tribune/:id/xml', tribune.xml);

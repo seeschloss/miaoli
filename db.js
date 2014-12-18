@@ -63,15 +63,25 @@ MiaoliDB.prototype.addUserOwnedTribune = function(user, tribune, callback) {
   });
 };
 
+MiaoliDB.prototype.saveTribune = function(tribune, callback) {
+  var data = {
+    admin: tribune.admin ? tribune.admin.miaoliId : null,
+    title: tribune.title,
+    require_user_authentication: tribune.require_user_authentication
+  };
+
+  this._tribunes[tribune.id] = tribune;
+  this.redis.hmset("tribune:" + tribune.id, data, callback);
+};
+
 MiaoliDB.prototype.loadTribune = function(tribuneId, callback) {
   if (tribuneId in this._tribunes) {
-    console.log(this._tribunes[tribuneId]);
     return callback(null, this._tribunes[tribuneId]);
   }
 
   var db = this;
 
-  console.log("Loading user " + tribuneId);
+  console.log("Loading tribune " + tribuneId);
 
   this.redis.hgetall("tribune:" + tribuneId, function(err, tribune) {
     if (!tribune) {

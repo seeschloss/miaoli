@@ -18,6 +18,21 @@ h1#title a {
   text-decoration: none;
 }
 
+.tribune-config ul {
+  list-style-type: none;
+}
+
+.tribune-config li :first-child {
+  display: inline-block;
+  width: 200px;
+}
+
+.tribune-config li * {
+  vertical-align: middle;
+  margin-left: 0;
+  padding-left: 0;
+}
+
 #controls {
   margin: 0;
   list-style-type: none;

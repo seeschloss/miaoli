@@ -1,0 +1,18 @@
+extends layout
+
+block content
+  div.tribune-config(data-tribune-id=tribune.id)
+    h1= title
+
+    form(action="",method="post")
+      ul
+        li
+          label(for="tribune-title") Title
+          input(id="tribune-title",type="text",name="title",value=tribune.title)
+
+        li
+          label(for="user-authentication") Require user authentication
+          input(id="user-authentication",type="checkbox",value=tribune.require_user_authentication)
+
+        p
+          input(type="submit",value="Save")
