@@ -155,7 +155,7 @@ Tribune.prototype.render_post = function(post, callback) {
 
 Tribune.prototype.xml = function() {
   // No need to write an XML formatter for this
-  var xml = '<board site="' + this.url() + '">\n';
+  var xml = '<board site="' + this.url + '">\n';
 
   this.posts.reverse().forEach(function(post) {
     xml += ' <post id="' + post.data.id + '" time="' + post.tribune_timestamp() + '">\n';
@@ -168,10 +168,6 @@ Tribune.prototype.xml = function() {
   xml += '</board>\n';
 
   return xml;
-};
-
-Tribune.prototype.url = function() {
-  return "http://cypris.seos.fr:3000/tribune/" + this.id;
 };
 
 Tribune.prototype.load_posts = function(n, callback) {
