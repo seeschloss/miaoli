@@ -1,7 +1,6 @@
 // vim:et:sw=2
 
-var redis = require("redis"),
-    Post = require("./post.js").Post,
+var Post = require("./post.js").Post,
     jade = require("jade"),
     async = require("async"),
     Chance = require("chance");
@@ -11,11 +10,7 @@ exports.load = function(req, res, next) {
 
   req.tribune = new Tribune(id, function(err, tribune) {
     if (tribune.admin === null && tribune.posts.length == 0 && req.user) {
-      tribune.admin = req.user.miaoliId;
-
-      req.user.tribunes.push(tribune.id);
-      global.db.lpush('user:' + tribune.admin + ':tribunes', tribune.id);
-      global.db.set('tribune:' + tribune.id + ':admin', tribune.admin, function(err) {next();});
+      global.db.addUserOwnedTribune(req.user, tribune, function(err) {next();});
     } else {
       next();
     }
@@ -49,7 +44,8 @@ exports.form_post = function(req, res, next) {
   async.waterfall([
     function(callback) {
       tribune.post({
-        tribune: tribune.id,
+        tribune: tribune,
+        user: req.user,
         message: req.body.message,
         timestamp: Date.now(),
         info: req.get('User-Agent')
@@ -110,34 +106,23 @@ function Tribune(id, callback) {
   this.title = 'Tribune ' + this.id;
 
   var tribune = this;
-  this.load(function(err, posts) {
-    if (callback) {
-      callback(null, tribune);
-    }
-  });
+
+  this.load(callback);
 };
 
 Tribune.prototype.load = function(callback) {
   var tribune = this;
 
-  async.waterfall([
-    function(callback) {
-      tribune.load_admin(callback);
-    },
-    function(admin, callback) {
-      tribune.load_posts(tribune.max_posts, callback);
+  global.db.loadTribune(this.id, function(err, data) {
+    for (key in data) {
+      if (data.hasOwnProperty(key)) {
+        tribune[key] = data[key];
+      }
     }
-  ], function(err, posts) {
-    callback(err, tribune);
-  });
-};
 
-Tribune.prototype.load_admin = function(callback) {
-  var tribune = this;
-
-  global.db.get('tribune:' + this.id + ':admin', function(err, admin) {
-    tribune.admin = admin;
-    callback(err, admin);
+    if (callback) {
+      callback(err, tribune);
+    }
   });
 };
 
@@ -158,9 +143,9 @@ Tribune.prototype.xml = function() {
   var xml = '<board site="' + this.url + '">\n';
 
   this.posts.reverse().forEach(function(post) {
-    xml += ' <post id="' + post.data.id + '" time="' + post.tribune_timestamp() + '">\n';
-    xml += '  <info>' + post.data.info + '</info>\n';
-    xml += '  <login>' + (post.data.user != undefined ? post.data.user.name : '') + '</login>\n';
+    xml += ' <post id="' + post.id + '" time="' + post.tribune_timestamp() + '">\n';
+    xml += '  <info>' + post.info + '</info>\n';
+    xml += '  <login>' + (post.user != undefined ? post.user.name : '') + '</login>\n';
     xml += '  <message>' + post.message_xml() + '</message>\n';
     xml += ' </post>\n';
   });
@@ -170,54 +155,15 @@ Tribune.prototype.xml = function() {
   return xml;
 };
 
-Tribune.prototype.load_posts = function(n, callback) {
-  this.posts = [];
-
-  global.db.lrange('posts:' + this.id + ':json', -1 * n, -1,
-   (function(tribune) {return function(err, json_posts) {
-    for (var i = 0, l = json_posts.length ; i < l ; i++) {
-      var post = new Post(tribune.id, json_posts[i]);
-      tribune.posts.push(post);
-    }
-
-    tribune.posts = tribune.posts.sort(tribune.sort_posts);
-
-    if (callback) {
-      callback(null, tribune.posts);
-    }
-  }})(this));
-};
-
 Tribune.prototype.sort_posts = function(a, b) {
   return a.data.id > b.data.id ? 1 : -1;
 };
 
-Tribune.prototype.post = function(post, callback) {
+Tribune.prototype.post = function(data, callback) {
   var tribune = this;
 
-  global.db.rpush('posts:' + this.id, '', function(err, post_id) {
-    // Now we know the post's id
-    post.id = post_id;
-
-    if (!post.timestamp) {
-      post.timestamp = Date.now();
-    }
-
-    post.message = post.message.substr(0, 500);
-
-    console.log('... post id is ' + post.id);
-    console.log(post);
-
-    // Store posts preparsed in a few formats.
-    global.db.rpush('posts:' + tribune.id + ':json', JSON.stringify(post));
-
-    // And a post:TRIBUNE_ID:POST_ID hash with the post values.
-    global.db.hmset('post:' + tribune.id + ':' + post.id, post);
-
-    console.log('Post ' + post.id + ' pushed to tribune ' + tribune.id);
-
-    if (callback) {callback(err, new Post(tribune.id, post));}
-  });
+  var post = new Post(this, data);
+  post.save(callback);
 };
 
 exports.Tribune = Tribune;

@@ -19,17 +19,13 @@ tz.loadingScheme = tz.loadingSchemes.MANUAL_LOAD;
 tz.loadZoneJSONData('timezones.json', true);
 
 
-exports.Post = function (tribune_id, data) {
-  this.tribune = tribune_id;
-
-  this.data = {
-    id: undefined,
-    user: undefined,
-    nick: undefined,
-    info: undefined,
-    timestamp: undefined,
-    message: undefined
-  };
+exports.Post = function (tribune, data, callback) {
+  this.id = undefined;
+  this.user = undefined;
+  this.nick = undefined;
+  this.info = undefined;
+  this.timestamp = undefined;
+  this.message = undefined;
 
   if (undefined != data) {
     if (typeof data == 'string') {
@@ -40,39 +36,57 @@ exports.Post = function (tribune_id, data) {
 
     for (var k in this.json) {
       if (this.json.hasOwnProperty(k)) {
-        this.data[k] = this.json[k];
+        this[k] = this.json[k];
       }
+    }
+  }
+
+  this.tribune = tribune;
+
+  if (this.user && !isObject(this.user)) {
+    var post = this;
+
+    global.db.loadUser(this.user, function(err, user) {
+      post.user = user;
+
+      if (callback) {
+        callback(err, post);
+      }
+    });
+  } else {
+    if (callback) {
+      callback(err, post);
     }
   }
 }
 
 exports.Post.prototype.nickname = function() {
-  if (undefined != this.data.user) {
-    return this.data.user.name;
-  } else if (undefined != this.data.nick && this.data.nick.length > 0) {
-    return this.data.nick.substr(0, 15);
-  } else if (undefined != this.data.info) {
-    return this.data.info.substr(0, 10);
+  if (undefined != this.user) {
+    return this.user.name;
+  } else if (undefined != this.nick && this.nick.length > 0) {
+    return this.nick.substr(0, 15);
+  } else if (undefined != this.info) {
+    return this.info.substr(0, 10);
   } else {
     return '';
   }
 };
 
 exports.Post.prototype.clock = function() {
-  return date.strftime(new timezoneJS.Date(this.data.timestamp, "Europe/Paris"), "%H:%M:%S");
+  return date.strftime(new timezoneJS.Date(this.timestamp, "Europe/Paris"), "%H:%M:%S");
 };
 
 exports.Post.prototype.tribune_timestamp = function() {
-  return date.strftime(new timezoneJS.Date(this.data.timestamp, "Europe/Paris"), "%Y%m%d%H%M%S");
+  return date.strftime(new timezoneJS.Date(this.timestamp, "Europe/Paris"), "%Y%m%d%H%M%S");
 };
 
 exports.Post.prototype.message_html = function() {
-  if (this.data.message) {
+  if (this.message) {
     var callback = function(match, tag, text) {
       text = text.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
       return '\032' + tag + '\033' + text + '\032/' + tag + '\033';
     }
-    message = this.data.message.substr(0, 500);
+    message = this.message.substr(0, 500);
     message = message.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
 
     message = message.replace(/&/g, '&amp;');
@@ -108,12 +122,12 @@ exports.Post.prototype.message_html = function() {
   }
 };
 exports.Post.prototype.message_xml = function() {
-  if (this.data.message) {
+  if (this.message) {
     var callback = function(match, tag, text) {
       text = text.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
       return '\032' + tag + '\033' + text + '\032/' + tag + '\033';
     }
-    message = this.data.message.substr(0, 500);
+    message = this.message.substr(0, 500);
     message = message.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
 
     message = message.replace(/&/g, '&amp;');
@@ -142,5 +156,15 @@ exports.Post.prototype.message_xml = function() {
   }
 };
 exports.Post.prototype.message_plain = function() {
-  return this.data.message;
+  return this.message;
 };
+
+exports.Post.prototype.save = function(callback) {
+  if (!this.timestamp) {
+    this.timestamp = Date.now();
+  }
+  this.message = this.message.substr(0, 500);
+
+  global.db.savePost(this, callback);
+};
+

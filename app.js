@@ -6,8 +6,8 @@
 var express = require('express')
   , routes = require('./routes/router')
   , http = require('http')
-  , redis = require('redis')
   , tribune = require('./tribune')
+  , MiaoliDB = require('./db').MiaoliDB
   , io = require('socket.io')
   , passport = require('passport')
   , LocalStrategy = require('passport-local').Strategy
@@ -17,7 +17,7 @@ var express = require('express')
 var env = process.env.NODE_ENV || 'development';
 var config = require('./config.json')[env];
 
-global.db = redis.createClient(config.redis.port, config.redis.host);
+global.db = new MiaoliDB(config);
 
 var app = express();
 var server = http.createServer(app);
@@ -55,9 +55,8 @@ passport.use(new LocalStrategy({
 
     profile.miaoliId = 'local:' + username;
     profile.providerLabel = "Miaoli";
-    global.db.hmset('user:' + profile.miaoliId, profile, function() {
-      return done(null, profile);
-    });
+
+    global.db.saveUser(profile, done);
   }
 ));
 
@@ -69,9 +68,8 @@ passport.use(new GoogleStrategy({
   function(accessToken, refreshToken, profile, done) {
     profile.miaoliId = "google:" + profile.id;
     profile.providerLabel = "Google";
-    global.db.hmset('user:' + profile.miaoliId, profile, function() {
-      return done(null, profile);
-    });
+
+    global.db.saveUser(profile, done);
   }
 ));
 
@@ -82,14 +80,8 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(miaoliId, done) {
   console.log("Deserialize " + miaoliId);
-  global.db.hgetall("user:" + miaoliId, function(err, user) {
-    user.tribunes = [];
-    global.db.lrange("user:" + miaoliId + ":tribunes", 0, -1, function(err, tribune_ids) {
-      if (tribune_ids) tribune_ids.forEach(function(tribune_id) {
-        user.tribunes.push(new tribune.Tribune(tribune_id));
-      });
-      done(null, user);
-    });
+  global.db.loadUser(miaoliId, function(err, user) {
+    done(err, user);
   });
 });
 
@@ -122,7 +114,7 @@ app.get('/auth/google/return', passport.authenticate('google'), function(req, re
   }
 });
 
-io = io.listen(server);
+io = io.listen(server, { log: false });
 
 tribune.onNewPost = function(tribune, post) {
   io.sockets.in(post.tribune).emit('new-post', {tribune: tribune, post: post});
