@@ -94,7 +94,7 @@ exports.xml = function(req, res, next) {
 
 function Tribune(id, callback) {
   this.id = id;
-  this.anonymous = true;
+  this.anonymous = false;
   this.posts = [];
   this.admin = null;
 

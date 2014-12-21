@@ -2,6 +2,7 @@ extends layout
 
 block content
   h1 Hello, #{user.displayName}
+    a.config(href='/user/config') configure
   if user.tribunes
     h2 Your tribunes
     ul#tribunes

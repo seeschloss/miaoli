@@ -9,6 +9,7 @@ var express = require('express')
   , routes = require('./routes/router')
   , http = require('http')
   , tribune = require('./tribune')
+  , user = require('./user')
   , MiaoliDB = require('./db').MiaoliDB
   , io = require('socket.io')
   , passport = require('passport')
@@ -83,15 +84,11 @@ passport.use(new GoogleStrategy({
 ));
 
 passport.serializeUser(function(user, done) {
-  console.log("Serialize " + user.miaoliId);
-  done(null, user.miaoliId);
+  return user.miaoliId;
 });
 
 passport.deserializeUser(function(miaoliId, done) {
-  console.log("Deserialize " + miaoliId);
-  global.db.loadUser(miaoliId, function(err, user) {
-    done(err, user);
-  });
+  return new user.User(miaoliId, done);
 });
 
 
@@ -102,11 +99,19 @@ app.all('/tribune/:id', tribune.load);
 app.all('/tribune/:id/*', tribune.load);
 
 app.get('/user', routes.user_home);
+app.get('/user/config', routes.user_config);
+app.post('/user/config', function(req, res) {
+  if (req.user) {
+    req.tribune.configFromPost(req.body, function() {});
+  };
+  res.redirect(302, '/');
+});
+
 app.get('/tribune/:id', routes.tribune);
 
 app.get('/tribune/:id/config', routes.tribune_config);
 app.post('/tribune/:id/config', function(req, res) {
-  if (req.user === req.tribune.admin) {
+  if (req.user.miaoliId === req.tribune.admin.miaoliId) {
     req.tribune.configFromPost(req.body, function() {});
   };
   res.redirect(302, '/tribune/' + req.tribune.id);

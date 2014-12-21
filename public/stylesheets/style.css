@@ -28,16 +28,16 @@ h1 a.config:hover {
   text-decoration: underline;
 }
 
-.tribune-config ul {
+.config form ul {
   list-style-type: none;
 }
 
-.tribune-config li :first-child {
+.config form li :first-child {
   display: inline-block;
   width: 200px;
 }
 
-.tribune-config li * {
+.config form li * {
   vertical-align: middle;
   margin-left: 0;
   padding-left: 0;

@@ -2,6 +2,7 @@
 
 var redis = require("redis")
   , Tribune = require('./tribune').Tribune
+  , User = require('./user').User
   , Post = require('./post').Post;
 
 function MiaoliDB(config) {
@@ -96,7 +97,7 @@ MiaoliDB.prototype.loadTribune = function(tribuneId, callback) {
       tribune.posts = posts;
 
       if (tribune.admin) {
-        db.loadUser(tribune.admin, function(err, user) {
+        new User(tribune.admin, function(err, user) {
           tribune.admin = user;
           callback(err, tribune);
         });
