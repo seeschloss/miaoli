@@ -8,7 +8,6 @@ exports.tribune = function(req, res){
 };
 
 exports.tribune_config = function(req, res){
-  console.log(req.tribune);
   if (req.user && req.tribune && req.tribune.admin === req.user) {
     res.render('tribune-config', { title: req.tribune.title, tribune: req.tribune, user: req.user });
   } else {

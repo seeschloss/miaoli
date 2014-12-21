@@ -1,4 +1,5 @@
 li(value=post.id,data-timestamp=post.tribune_timestamp())
   span.time= post.clock()
-  span.user= post.nickname()
+  if !tribune.anonymous
+    span.user= post.nickname()
   span.message!= post.message_html()

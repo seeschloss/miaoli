@@ -3,6 +3,8 @@ extends layout
 block content
   div.tribune(data-tribune-id=tribune.id,data-max-posts=tribune.max_posts)
     h1= title
+      if tribune.admin == user
+        a.config(href=tribune.config_url) configure
     ol.posts
       each post in tribune.posts
         include post

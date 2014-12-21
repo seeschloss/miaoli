@@ -14,8 +14,18 @@ h1#title {
   font-size: 300%;
 }
 
-h1#title a {
+h1 a {
   text-decoration: none;
+}
+
+h1 a.config {
+  margin-left: 1ex;
+  font-size: small;
+  font-weight: normal;
+  text-decoration: none;
+}
+h1 a.config:hover {
+  text-decoration: underline;
 }
 
 .tribune-config ul {

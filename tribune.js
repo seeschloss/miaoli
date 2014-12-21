@@ -105,6 +105,7 @@ function Tribune(id, callback) {
   this.local_login_url = "/tribune/" + this.id + "/auth/local";
   this.google_login_url = "/tribune/" + this.id + "/auth/google";
   this.logout_url = "/tribune/" + this.id + "/logout";
+  this.config_url = "/tribune/" + this.id + "/config";
   this.title = 'Tribune ' + this.id;
 
   this.require_user_authentication = false;
@@ -139,10 +140,16 @@ Tribune.prototype.configFromPost = function(params, callback) {
     this.title = params['title'];
   }
 
-  if ('require_user_authentication' in params) {
+  if ('user-authentication' in params) {
     this.require_user_authentication = true;
   } else {
     this.require_user_authentication = false;
+  }
+
+  if ('anonymous' in params) {
+    this.anonymous = true;
+  } else {
+    this.anonymous = false;
   }
 
   this.save(callback);
