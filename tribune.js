@@ -25,11 +25,9 @@ exports.loadTribune = function(id, callback) {
   if (id in _tribunes) {
     callback(null, _tribunes[id]);
   } else {
-    global.db.loadTribune(id, function(err, data) {
-      console.log("Loaded tribune " + id);
-      var tribune = new Tribune(id);
-      tribune.load(callback);
-    });
+    console.log("Loaded tribune " + id);
+    var tribune = new Tribune(id);
+    tribune.load(callback);
   }
 };
 

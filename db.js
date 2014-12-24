@@ -124,7 +124,7 @@ MiaoliDB.prototype.loadTribune = function(tribuneId, callback) {
       tribune.posts = posts;
 
       if (tribune.admin) {
-        new User(tribune.admin, function(err, user) {
+        db.loadUser(tribune.admin, function(err, user) {
           tribune.admin = user;
           callback(err, tribune);
         });
