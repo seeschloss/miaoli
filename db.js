@@ -1,9 +1,10 @@
 // vim:et:sw=2
 
 var redis = require("redis")
-  , Tribune = require('./tribune').Tribune
-  , User = require('./user').User
-  , Post = require('./post').Post;
+  , async = require("async")
+  , Tribune = require('./tribune')
+  , User = require('./user')
+  , Post = require('./post');
 
 function MiaoliDB(config) {
   this.redis = redis.createClient(config.redis.port, config.redis.host);
@@ -41,7 +42,11 @@ MiaoliDB.prototype.loadUser = function(miaoliId, callback) {
     db.loadUserOwnedTribunes(user, function(err, tribunes) {
       user.tribunes = tribunes;
 
-      callback(err, user);
+      db.loadUserSubscribedTribunes(user, function(err, tribunes) {
+        user.subscribed = tribunes;
+
+        callback(err, user);
+      });
     });
   });
 };
@@ -55,23 +60,68 @@ MiaoliDB.prototype.loadUserOwnedTribunes = function(user, callback) {
       callback(err, []);
     } else {
       console.log("User has " + tribune_ids.length + " tribunes");
-      var tribunes = [];
-      tribune_ids
+      async.parallel(tribune_ids
         .filter(function(tribune_id, i, arr) { return arr.lastIndexOf(tribune_id) === i; })
-        .forEach(function(tribune_id) {
-          var tribune = new Tribune(tribune_id);
-          tribune.load(function(){});
-          tribunes.push(tribune);
-        });
-      if (tribunes.length != tribune_ids.length) {
-        db.saveUserOwnedTribunes(user, tribunes.map(function(tribune) { return tribune.id; }), function(){});
-      }
-      callback(err, tribunes);
+        .map(function(tribune_id) {
+          return function(callback) {
+            Tribune.loadTribune(tribune_id, callback);
+          };
+        }),
+        function(err, tribunes) {
+            console.log(tribunes);
+          if (tribunes.length != tribune_ids.length) {
+            db.saveUserOwnedTribunes(user, tribunes.map(function(tribune) { return tribune.id; }), callback(err, tribunes));
+          } else {
+            callback(err, tribunes);
+          }
+        }
+      );
     }
   });
 };
 
+MiaoliDB.prototype.loadUserSubscribedTribunes = function(user, callback) {
+  console.log("Loading user " + user.miaoliId + " subscribed tribunes");
+  var db = this;
+  this.redis.lrange("user:" + user.miaoliId + ":subscribed", 0, -1, function(err, tribune_ids) {
+    if (!tribune_ids) {
+      console.log("User has no tribune subscribed");
+      callback(err, []);
+    } else {
+      console.log("User has " + tribune_ids.length + " tribunes subscribed");
+      async.parallel(tribune_ids
+        .filter(function(tribune_id, i, arr) { return arr.lastIndexOf(tribune_id) === i; })
+        .map(function(tribune_id) {
+          return function(callback) {
+            db.loadTribune(tribune_id, callback);
+          };
+        }),
+        function(err, tribunes) {
+          if (tribunes.length != tribune_ids.length) {
+            db.saveUserSubscribedTribunes(user, tribunes.map(function(tribune) { return tribune.id; }), callback(err, tribunes));
+          } else {
+            callback(err, tribunes);
+          }
+        }
+      );
+    }
+  });
+};
+
+MiaoliDB.prototype.saveUserSubscribedTribunes = function(user, tribune_ids, callback) {
+  var db = this;
+
+  this.redis.ltrim('user:' + user.miaoliId + ':subscribed', -1, 0, function(err, result) {
+    tribune_ids.forEach(function(tribune_id) {
+      db.addUserSubscribedTribune(user, tribune_id);
+    });
+    callback(err, tribune_ids);
+  });
+}
+
 MiaoliDB.prototype.saveUserOwnedTribunes = function(user, tribune_ids, callback) {
+  var db = this;
+
   this.redis.ltrim('user:' + user.miaoliId + ':tribunes', -1, 0, function(err, result) {
     tribune_ids.forEach(function(tribune_id) {
       db.addUserOwnedTribune(user, tribune_id);
@@ -79,6 +129,10 @@ MiaoliDB.prototype.saveUserOwnedTribunes = function(user, tribune_ids, callback)
     callback(err, tribune_ids);
   });
 }
+
+MiaoliDB.prototype.addUserSubscribedTribune = function(user, tribune_id, callback) {
+  this.redis.lpush('user:' + user.miaoliId + ':subscribed', tribune_id, callback);
+};
 
 MiaoliDB.prototype.addUserOwnedTribune = function(user, tribune_id, callback) {
   var db = this;
@@ -183,4 +237,4 @@ MiaoliDB.prototype.addPostToTribune = function(post, tribune, callback) {
   });
 };
 
-exports.MiaoliDB = MiaoliDB;
+module.exports = MiaoliDB;

@@ -1,13 +1,18 @@
 mixin login
   if user
-    p <a href='/user' class="login">#{user.displayName}</a> (<span class="provider">#{user.providerLabel}</span>)
+    a(href='/user') #{user.displayName} (<span class="provider">#{user.providerLabel}</span>)
+    ul.dropdown
+      li
+        a.logout(href='/auth/logout') Logout
   else
-    a.login.google(href='/auth/google') Login with Google
-    form(action='/auth/local',method="post")
-      input(type="text",name="username",placeholder="Login")
-      input(type="password",name="password",placeholder="Password")
-      input(type="submit",value="Login")
+    a Login
+    ul.dropdown
+      li
+        a.login.google(href='/auth/google') Login with Google
+      li.with-form
+        label(for="username") Login with password
+        form(action='/auth/local',method="post")
+          input.row(type="text",name="username",placeholder="Login",id="username")
+          input.row(type="password",name="password",placeholder="Password")
+          input.row(type="submit",value="Login")
 
-mixin logout
-  if user
-    a.logout(href='/auth/logout') Logout

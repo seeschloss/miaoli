@@ -1,9 +1,44 @@
 /* vim:et ts=2 sw=2
  */
 body {
-  padding: 20px 50px 50px 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
+
+
+.top-bar {
+  padding: 1em;
+  height: auto;
+  margin-bottom: 2em;
+}
+
+.top-bar, .top-bar li, .top-bar ul li a {
+  background: #EEE !important;
+  color: black;
+}
+
+.top-bar form {
+  padding: 0 1ex 1em 1ex;
+}
+
+.top-bar li.with-form label {
+  background: transparent;
+  text-transform: none;
+  color: black;
+  font-size: 0.8125rem;
+  font-weight: normal;
+  padding-top: 1em !important;
+  padding-bottom: 0 !important;
+  line-height: 100% !important;
+  text-align: left;
+}
+
+.top-bar .name h1 a {
+  color: #00B7FF;
+}
+
+.top-bar-section li a:not(.button) { color: black !important; background:transparent !important; }
+.top-bar-section li:hover { color: white !important; background:#00B7FF !important; }
+.top-bar-section .has-dropdown>a:after { border-top-color: white; }
 
 a {
   color: #00B7FF;

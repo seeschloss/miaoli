@@ -19,7 +19,7 @@ tz.loadingScheme = tz.loadingSchemes.MANUAL_LOAD;
 tz.loadZoneJSONData('timezones.json', true);
 
 
-exports.Post = function (tribune, data, callback) {
+function Post(tribune, data, callback) {
   this.id = undefined;
   this.user = undefined;
   this.nick = undefined;
@@ -60,7 +60,7 @@ exports.Post = function (tribune, data, callback) {
   }
 }
 
-exports.Post.prototype.nickname = function() {
+Post.prototype.nickname = function() {
   if (undefined != this.user) {
     return this.user.name;
   } else if (undefined != this.nick && this.nick.length > 0) {
@@ -72,15 +72,15 @@ exports.Post.prototype.nickname = function() {
   }
 };
 
-exports.Post.prototype.clock = function() {
+Post.prototype.clock = function() {
   return date.strftime(new timezoneJS.Date(this.timestamp, "Europe/Paris"), "%H:%M:%S");
 };
 
-exports.Post.prototype.tribune_timestamp = function() {
+Post.prototype.tribune_timestamp = function() {
   return date.strftime(new timezoneJS.Date(this.timestamp, "Europe/Paris"), "%Y%m%d%H%M%S");
 };
 
-exports.Post.prototype.message_html = function() {
+Post.prototype.message_html = function() {
   if (this.message) {
     var callback = function(match, tag, text) {
       text = text.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
@@ -121,7 +121,7 @@ exports.Post.prototype.message_html = function() {
     return '';
   }
 };
-exports.Post.prototype.message_xml = function() {
+Post.prototype.message_xml = function() {
   if (this.message) {
     var callback = function(match, tag, text) {
       text = text.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
@@ -155,11 +155,11 @@ exports.Post.prototype.message_xml = function() {
     return '';
   }
 };
-exports.Post.prototype.message_plain = function() {
+Post.prototype.message_plain = function() {
   return this.message;
 };
 
-exports.Post.prototype.save = function(callback) {
+Post.prototype.save = function(callback) {
   if (!this.timestamp) {
     this.timestamp = Date.now();
   }
@@ -168,3 +168,4 @@ exports.Post.prototype.save = function(callback) {
   global.db.savePost(this, callback);
 };
 
+module.exports = Post;

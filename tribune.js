@@ -1,14 +1,14 @@
 // vim:et:sw=2
 
-var Post = require("./post.js").Post,
+var Post = require("./post.js"),
     jade = require("jade"),
     async = require("async"),
     Chance = require("chance");
 
-exports.load = function(req, res, next) {
+Tribune.load = function(req, res, next) {
   var id = req.params.id.replace(/:/g, '');
 
-  exports.loadTribune(id, function(err, tribune) {
+  Tribune.loadTribune(id, function(err, tribune) {
     req.tribune = tribune;
 
     if (tribune.admin === null && tribune.posts.length == 0 && req.user) {
@@ -21,17 +21,7 @@ exports.load = function(req, res, next) {
 
 var _tribunes = {};
 
-exports.loadTribune = function(id, callback) {
-  if (id in _tribunes) {
-    callback(null, _tribunes[id]);
-  } else {
-    console.log("Loaded tribune " + id);
-    var tribune = new Tribune(id);
-    tribune.load(callback);
-  }
-};
-
-exports.create = function(name, callback) {
+Tribune.create = function(name, callback) {
   var id = name;
 
   if (name == '<random>') {
@@ -41,10 +31,10 @@ exports.create = function(name, callback) {
     id = name.replace(/[\s\\\/:?&#]/g, '');
   }
 
-  exports.loadTribune(id, callback);
+  Tribune.loadTribune(id, callback);
 };
 
-exports.form_post = function(req, res, next) {
+Tribune.form_post = function(req, res, next) {
   var tribune = req.tribune;
 
   if (!req.body.message) {
@@ -70,7 +60,7 @@ exports.form_post = function(req, res, next) {
       tribune.render_post(post, callback);
     },
     function(str, callback) {
-      exports.onNewPost(tribune.id, str);
+      Tribune.onNewPost(tribune.id, str);
       callback(null);
     }
   ], function(err, result) {
@@ -78,12 +68,12 @@ exports.form_post = function(req, res, next) {
   });
 };
 
-exports.direct_post = function(post_data) {
+Tribune.direct_post = function(post_data) {
   var tribune;
 
   async.waterfall([
     function(callback) {
-      exports.loadTribune(post_data.tribune, callback);
+      Tribune.loadTribune(post_data.tribune, callback);
     },
     function(loaded_tribune, callback) {
       tribune = loaded_tribune;
@@ -94,13 +84,13 @@ exports.direct_post = function(post_data) {
       tribune.render_post(post, callback);
     },
     function(str, callback) {
-      exports.onNewPost(tribune.id, str);
+      Tribune.onNewPost(tribune.id, str);
       callback(null);
     }
   ]);
 };
 
-exports.xml = function(req, res, next) {
+Tribune.xml = function(req, res, next) {
   res.set('Content-Type', 'application/xml');
   res.send(200, req.tribune.xml());
 };
@@ -122,6 +112,15 @@ function Tribune(id) {
   this.title = 'Tribune ' + this.id;
 
   this.require_user_authentication = false;
+};
+
+Tribune.loadTribune = function(id, callback) {
+  if (id in _tribunes) {
+    callback(null, _tribunes[id]);
+  } else {
+    console.log("Loaded tribune " + id);
+    (new Tribune(id)).load(callback);
+  }
 };
 
 Tribune.prototype.load = function(callback) {
@@ -210,5 +209,5 @@ Tribune.prototype.post = function(data, callback) {
   post.save(callback);
 };
 
-exports.Tribune = Tribune;
+module.exports = Tribune;
 

@@ -1,7 +1,14 @@
 // vim:et:sw=2
 
 var _users = {};
-exports.loadUser = function(miaoliId, callback) {
+
+function User(id, callback) {
+  this.miaoliId = id;
+  this.tribunes = [];
+  this.subscribed = [];
+}
+
+User.loadUser = function(miaoliId, callback) {
   if (miaoliId in _users) {
     callback(null, _users[miaoliId]);
   } else {
@@ -20,10 +27,6 @@ exports.loadUser = function(miaoliId, callback) {
     });
   }
 };
-
-function User(id, callback) {
-  this.miaoliId = id;
-}
 
 User.prototype.checkPassword = function(password) {
   var crypto = require('crypto');
@@ -63,5 +66,5 @@ User.prototype.save = function(callback) {
   global.db.saveUser(this, callback);
 };
 
-exports.User = User;
+module.exports = User;
 

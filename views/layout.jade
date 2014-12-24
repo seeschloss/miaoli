@@ -13,17 +13,30 @@ doctype html
 html
   head
     title= title
+    link(rel='stylesheet', href='/stylesheets/foundation.min.css')
     link(rel='stylesheet', href='/stylesheets/style.css')
   body
-    h1#title
-        a(href='/') Miaoli
-    block controls
-      ul#controls
-        li#user
-          +login
-        li#logout
-          +logout
-    block content
+    nav.top-bar(data-topbar,role="navigation")
+      ul.title-area
+        li.name
+          h1#title
+            a(href='/') Miaoli
+        li.toggle-topbar.menu-icon
+          a(href='/')
+            span Menu
+      section.top-bar-section
+        ul.right
+          li.has-form.has-dropdown#user
+            +login
+    div.row
+      div.column
+        block content
     script(type='text/javascript', src='/socket.io/socket.io.js')
+    script(type='text/javascript', src='/javascripts/jquery.js')
+    script(type='text/javascript', src='/javascripts/modernizr.js')
+    script(type='text/javascript', src='/javascripts/placeholder.js')
+    script(type='text/javascript', src='/javascripts/fastclick.js')
+    script(type='text/javascript', src='/javascripts/foundation.min.js')
     script(type='text/javascript', src='/javascripts/puli.js')
     script(type='text/javascript', src='/javascripts/miaoli.js')
+    script(type='text/javascript') $(document).foundation();

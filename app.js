@@ -8,9 +8,9 @@ var express = require('express')
   , RedisStore = require('connect-redis')(session)
   , routes = require('./routes/router')
   , http = require('http')
-  , tribune = require('./tribune')
-  , user = require('./user')
-  , MiaoliDB = require('./db').MiaoliDB
+  , Tribune = require('./tribune')
+  , User = require('./user')
+  , MiaoliDB = require('./db')
   , io = require('socket.io')
   , passport = require('passport')
   , LocalStrategy = require('passport-local').Strategy
@@ -66,7 +66,7 @@ passport.use(new LocalStrategy({
     profile.miaoliId = 'local:' + username;
     profile.providerLabel = "Miaoli";
 
-    user.loadUser(profile.miaoliId, function(err, user) {
+    User.loadUser(profile.miaoliId, function(err, user) {
       if (!user) {
         global.db.saveUser(profile, done);
       } else if (user.checkPassword(password)) {
@@ -96,15 +96,15 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(miaoliId, done) {
-  return user.loadUser(miaoliId, done);
+  return User.loadUser(miaoliId, done);
 });
 
 
 app.get('/', routes.home);
-app.post('/', function(req, res) { tribune.create(req.body.name, function(err, tribune) {res.redirect(302, '/tribune/' + tribune.id);}); });
+app.post('/', function(req, res) { Tribune.create(req.body.name, function(err, tribune) {res.redirect(302, '/tribune/' + tribune.id);}); });
 
-app.all('/tribune/:id', tribune.load);
-app.all('/tribune/:id/*', tribune.load);
+app.all('/tribune/:id', Tribune.load);
+app.all('/tribune/:id/*', Tribune.load);
 
 app.get('/user', routes.user_home);
 app.get('/user/config', routes.user_config);
@@ -133,9 +133,9 @@ app.post('/tribune/:id/config', function(req, res) {
   res.redirect(302, '/tribune/' + req.tribune.id);
 });
 
-app.post('/tribune/:id/post', tribune.form_post);
+app.post('/tribune/:id/post', Tribune.form_post);
 app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml'); res.send(201, req.tribune.xml()); });
-app.get('/tribune/:id/xml', tribune.xml);
+app.get('/tribune/:id/xml', Tribune.xml);
 
 app.get('/auth/logout', function (req, res) { req.logout(); res.redirect('/'); });
 app.get('/tribune/:id/logout', function (req, res) { req.logout(); res.redirect('/tribune/' + req.params.id); });
@@ -155,14 +155,14 @@ app.get('/auth/google/return', passport.authenticate('google'), function(req, re
 
 io = io.listen(server, { log: false });
 
-tribune.onNewPost = function(tribune, post) {
+Tribune.onNewPost = function(tribune, post) {
   io.sockets.in(post.tribune).emit('new-post', {tribune: tribune, post: post});
 };
 
 io.sockets.on('connection', function(socket) {
   socket.on('post', function(post) {
     console.log('Posting');
-    tribune.direct_post(post);
+    Tribune.direct_post(post);
   });
 
   socket.on('join', function(tribune) {
