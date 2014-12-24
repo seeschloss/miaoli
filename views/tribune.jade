@@ -14,7 +14,7 @@ block content
         input(type="text",name="nickname",value=user.displayName,disabled="disabled",readonly="readonly",placeholder="Nickname")
         input(class="message-input",type="text",name="message",placeholder="Your message")
         input(type="submit",value="⏎")
-      else if tribune.anonymous
+      else if !tribune.require_user_authentication
         input(type="text",name="nickname",placeholder="Nickname")
         input(class="message-input",type="text",name="message",placeholder="Your message")
         input(type="submit",value="⏎")
