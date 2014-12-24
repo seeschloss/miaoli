@@ -3,6 +3,11 @@ extends layout
 block content
   div.tribune(data-tribune-id=tribune.id,data-max-posts=tribune.max_posts)
     h1= title
+      if user
+        form
+          fieldset.switch.tiny.round
+            input#subscribe.subscribe(type="checkbox")
+            label(for="subscribe") plop
       if tribune.admin && user && tribune.admin.miaoliId == user.miaoliId
         a.config(href=tribune.config_url) configure
     ol.posts

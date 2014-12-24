@@ -40,6 +40,17 @@ body {
 .top-bar-section li:hover { color: white !important; background:#00B7FF !important; }
 .top-bar-section .has-dropdown>a:after { border-top-color: white; }
 
+h1 form {
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+h1 form fieldset {
+  padding: 0;
+  margin: 0 1ex 15px 1ex;
+  line-height: 1px;
+}
+
 a {
   color: #00B7FF;
 }
@@ -138,7 +149,7 @@ h1 a.config:hover {
 }
 
 .tribune li {
-  margin-bottom: 3px;
+  line-height: 140%;
 }
 
 .tribune .time, .tribune .user {
