@@ -5,6 +5,8 @@ block content
     h1 Your settings
 
     form(action="",method="post")
+      if errors
+        div.errors= errors.message
       ul
         li
           label(for="name") Name

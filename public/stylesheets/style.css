@@ -43,6 +43,11 @@ h1 a.config:hover {
   padding-left: 0;
 }
 
+.errors {
+  font-style: italic;
+  color: red;
+}
+
 #controls {
   margin: 0;
   list-style-type: none;

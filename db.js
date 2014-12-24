@@ -13,21 +13,29 @@ function MiaoliDB(config) {
 }
 
 MiaoliDB.prototype.saveUser = function(user, callback) {
+  var db = this;
+
   this.redis.hmset('user:' + user.miaoliId, user, function(err, result) {
+    db._users[user.miaoliId] = user;
     callback(err, user);
   });
 };
 
 MiaoliDB.prototype.loadUser = function(miaoliId, callback) {
+  console.log("Loading user " + miaoliId);
   if (miaoliId in this._users) {
+    console.log("User found in cache");
     return callback(null, this._users[miaoliId]);
   }
 
   var db = this;
 
-  console.log("Loading user " + miaoliId);
-
   this.redis.hgetall("user:" + miaoliId, function(err, user) {
+    if (user) {
+      console.log("User found in db");
+    } else {
+      console.log("User not found in db");
+    }
     db._users[miaoliId] = user;
 
     db.loadUserOwnedTribunes(user, function(err, tribunes) {
@@ -39,28 +47,44 @@ MiaoliDB.prototype.loadUser = function(miaoliId, callback) {
 };
 
 MiaoliDB.prototype.loadUserOwnedTribunes = function(user, callback) {
+  console.log("Loading user " + user.miaoliId + " tribunes");
+  var db = this;
   this.redis.lrange("user:" + user.miaoliId + ":tribunes", 0, -1, function(err, tribune_ids) {
     if (!tribune_ids) {
+      console.log("User has no tribune");
       callback(err, []);
     } else {
+      console.log("User has " + tribune_ids.length + " tribunes");
       var tribunes = [];
-      tribune_ids.forEach(function(tribune_id) {
-        tribunes.push(new Tribune(tribune_id));
-      });
-
+      tribune_ids
+        .filter(function(tribune_id, i, arr) { return arr.lastIndexOf(tribune_id) === i; })
+        .forEach(function(tribune_id) {
+          var tribune = new Tribune(tribune_id);
+          tribune.load(function(){});
+          tribunes.push(tribune);
+        });
+      if (tribunes.length != tribune_ids.length) {
+        db.saveUserOwnedTribunes(user, tribunes.map(function(tribune) { return tribune.id; }), function(){});
+      }
       callback(err, tribunes);
     }
   });
 };
 
-MiaoliDB.prototype.addUserOwnedTribune = function(user, tribune, callback) {
+MiaoliDB.prototype.saveUserOwnedTribunes = function(user, tribune_ids, callback) {
+  this.redis.ltrim('user:' + user.miaoliId + ':tribunes', -1, 0, function(err, result) {
+    tribune_ids.forEach(function(tribune_id) {
+      db.addUserOwnedTribune(user, tribune_id);
+    });
+    callback(err, tribune_ids);
+  });
+}
+
+MiaoliDB.prototype.addUserOwnedTribune = function(user, tribune_id, callback) {
   var db = this;
 
-  user.tribunes.push(tribune);
-  tribune.admin = user;
-
-  this.redis.lpush('user:' + tribune.admin.miaoliId + ':tribunes', tribune.id, function(err, result) {
-    db.redis.hset('tribune:' + tribune.id, 'admin', tribune.admin.miaoliId, callback);
+  this.redis.lpush('user:' + user.miaoliId + ':tribunes', tribune_id, function(err, result) {
+    db.redis.hset('tribune:' + tribune_id, 'admin', user.miaoliId, callback);
   });
 };
 
@@ -76,17 +100,20 @@ MiaoliDB.prototype.saveTribune = function(tribune, callback) {
 };
 
 MiaoliDB.prototype.loadTribune = function(tribuneId, callback) {
+  console.log("Loading tribune " + tribuneId);
   if (tribuneId in this._tribunes) {
+    console.log("Tribune found in cache");
     return callback(null, this._tribunes[tribuneId]);
   }
 
   var db = this;
 
-  console.log("Loading tribune " + tribuneId);
-
   this.redis.hgetall("tribune:" + tribuneId, function(err, tribune) {
     if (!tribune) {
       tribune = { };
+      console.log("Tribune not found in db");
+    } else {
+      console.log("Tribune found in db");
     }
 
     tribune.id = tribuneId;

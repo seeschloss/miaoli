@@ -1,25 +1,66 @@
 // vim:et:sw=2
 
+var _users = {};
+exports.loadUser = function(miaoliId, callback) {
+  if (miaoliId in _users) {
+    callback(null, _users[miaoliId]);
+  } else {
+    global.db.loadUser(miaoliId, function(err, data) {
+      var user = new User(miaoliId);
+
+      for (key in data) {
+        if (data.hasOwnProperty(key)) {
+          user[key] = data[key];
+        }
+      }
+
+      if (callback) {
+        callback(err, user);
+      }
+    });
+  }
+};
+
 function User(id, callback) {
   this.miaoliId = id;
-
-  this.load(callback);
 }
 
-User.prototype.load = function(callback) {
+User.prototype.checkPassword = function(password) {
+  var crypto = require('crypto');
+  var hash = crypto.createHash('sha256').update(password).digest('hex');
+
+  return hash == this.password;
+}
+
+User.prototype.configFromPost = function(params, callback) {
   var user = this;
 
-  global.db.loadUser(this.miaoliId, function(err, data) {
-    for (key in data) {
-      if (data.hasOwnProperty(key)) {
-        user[key] = data[key];
-      }
-    }
+  if ('name' in params) {
+    this.displayName = params['name'];
+  }
 
-    if (callback) {
-      callback(err, user);
+  if ('email' in params) {
+    this.email = params['email'];
+  }
+
+  if ('password' in params) {
+    if ('password-confirm' in params) {
+      if (params['password'] == params['password-confirm']) {
+        var crypto = require('crypto');
+        user.password = crypto.createHash('sha256').update(params['password']).digest('hex');
+      } else {
+        return callback({message: 'The passwords do not match.'});
+      }
+    } else {
+      return callback({message: 'You must enter your password twice.'});
     }
-  });
+  }
+
+  return this.save(callback);
+};
+
+User.prototype.save = function(callback) {
+  global.db.saveUser(this, callback);
 };
 
 exports.User = User;

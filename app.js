@@ -66,7 +66,15 @@ passport.use(new LocalStrategy({
     profile.miaoliId = 'local:' + username;
     profile.providerLabel = "Miaoli";
 
-    global.db.saveUser(profile, done);
+    user.loadUser(profile.miaoliId, function(err, user) {
+      if (!user) {
+        global.db.saveUser(profile, done);
+      } else if (user.checkPassword(password)) {
+        done(null, user);
+      } else {
+        done(null, false, {message: 'Incorrect password.'});
+      }
+    });
   }
 ));
 
@@ -84,11 +92,11 @@ passport.use(new GoogleStrategy({
 ));
 
 passport.serializeUser(function(user, done) {
-  return user.miaoliId;
+  return done(null, user.miaoliId);
 });
 
 passport.deserializeUser(function(miaoliId, done) {
-  return new user.User(miaoliId, done);
+  return user.loadUser(miaoliId, done);
 });
 
 
@@ -102,9 +110,17 @@ app.get('/user', routes.user_home);
 app.get('/user/config', routes.user_config);
 app.post('/user/config', function(req, res) {
   if (req.user) {
-    req.tribune.configFromPost(req.body, function() {});
-  };
-  res.redirect(302, '/');
+    req.user.configFromPost(req.body, function(err) {
+      if (err) {
+        req.formErrors = err;
+        routes.user_config(req, res);
+      } else {
+        res.redirect(302, '/user');
+      }
+    });
+  } else {
+    res.redirect(302, '/');
+  }
 });
 
 app.get('/tribune/:id', routes.tribune);
@@ -124,7 +140,7 @@ app.get('/tribune/:id/xml', tribune.xml);
 app.get('/auth/logout', function (req, res) { req.logout(); res.redirect('/'); });
 app.get('/tribune/:id/logout', function (req, res) { req.logout(); res.redirect('/tribune/' + req.params.id); });
 
-app.post('/auth/local', passport.authenticate('local'), function (req, res) { res.redirect('/'); });
+app.post('/auth/local', passport.authenticate('local', { successRedirect: '/user', failureRedirect: '/' }));
 app.post('/tribune/:id/auth/local', passport.authenticate('local'), function (req, res) { res.redirect('/tribune/' + req.params.id); });
 
 app.get('/auth/google', function(req, res) { return passport.authenticate('google', { scope: 'profile', state: null })(req, res); });

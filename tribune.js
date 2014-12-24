@@ -8,15 +8,29 @@ var Post = require("./post.js").Post,
 exports.load = function(req, res, next) {
   var id = req.params.id.replace(/:/g, '');
 
-  new Tribune(id, function(err, tribune) {
+  exports.loadTribune(id, function(err, tribune) {
     req.tribune = tribune;
 
     if (tribune.admin === null && tribune.posts.length == 0 && req.user) {
-      global.db.addUserOwnedTribune(req.user, tribune, function(err) {next();});
+      tribune.setAdmin(req.user, function(err) {next();});
     } else {
       next();
     }
   });
+};
+
+var _tribunes = {};
+
+exports.loadTribune = function(id, callback) {
+  if (id in _tribunes) {
+    callback(null, _tribunes[id]);
+  } else {
+    global.db.loadTribune(id, function(err, data) {
+      console.log("Loaded tribune " + id);
+      var tribune = new Tribune(id);
+      tribune.load(callback);
+    });
+  }
 };
 
 exports.create = function(name, callback) {
@@ -29,7 +43,7 @@ exports.create = function(name, callback) {
     id = name.replace(/[\s\\\/:?&#]/g, '');
   }
 
-  callback(null, new Tribune(id));
+  exports.loadTribune(id, callback);
 };
 
 exports.form_post = function(req, res, next) {
@@ -71,7 +85,7 @@ exports.direct_post = function(post_data) {
 
   async.waterfall([
     function(callback) {
-      tribune = new Tribune(post_data.tribune, callback);
+      exports.load(post_data.tribune, callback);
     },
     function(tribune, callback) {
       tribune.post(post_data, callback);
@@ -92,7 +106,7 @@ exports.xml = function(req, res, next) {
   res.send(200, req.tribune.xml());
 };
 
-function Tribune(id, callback) {
+function Tribune(id) {
   this.id = id;
   this.anonymous = false;
   this.posts = [];
@@ -109,10 +123,6 @@ function Tribune(id, callback) {
   this.title = 'Tribune ' + this.id;
 
   this.require_user_authentication = false;
-
-  var tribune = this;
-
-  this.load(callback);
 };
 
 Tribune.prototype.load = function(callback) {
@@ -130,6 +140,12 @@ Tribune.prototype.load = function(callback) {
     }
   });
 };
+
+Tribune.prototype.setAdmin = function(user, callback) {
+  user.tribunes.push(this);
+  this.admin = user;
+  global.db.addUserOwnedTribune(user, this.id, callback);
+}
 
 Tribune.prototype.save = function(callback) {
   global.db.saveTribune(this, callback);
