@@ -85,9 +85,10 @@ exports.direct_post = function(post_data) {
 
   async.waterfall([
     function(callback) {
-      exports.load(post_data.tribune, callback);
+      exports.loadTribune(post_data.tribune, callback);
     },
-    function(tribune, callback) {
+    function(loaded_tribune, callback) {
+      tribune = loaded_tribune;
       tribune.post(post_data, callback);
     },
     function(post, callback) {

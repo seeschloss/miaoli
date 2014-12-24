@@ -20,13 +20,3 @@ block content
         input(type="submit",value="⏎")
       else
         span.please Please login to participate.
-
-    if !user
-      a.login.google(href=tribune.google_login_url) Login with Google
-      form(action=tribune.local_login_url,method="post")
-        input(type="text",name="username",placeholder="Login")
-        input(type="password",name="password",placeholder="Password")
-        input(type="submit",value="Login")
-    else
-      p Logged in as <span class="login">#{user.displayName}</span> (<span class="provider">#{user.providerLabel}</span>)
-      a.logout(href=tribune.logout_url) Logout
