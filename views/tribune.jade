@@ -14,14 +14,26 @@ block content
       each post in tribune.posts
         include post
 
-    form(action=tribune.post_url,method="post")
+    form#tribune-post(action=tribune.post_url,method="post")
       if user
-        input(type="text",name="nickname",value=user.displayName,disabled="disabled",readonly="readonly",placeholder="Nickname")
-        input(class="message-input",type="text",name="message",placeholder="Your message")
-        input(type="submit",value="⏎")
+        div.row
+          div.large-6.column
+            div.row.collapse
+              div.large-2.column
+                input.prefix(type="text",name="nickname",value=user.displayName,disabled="disabled",readonly="readonly",placeholder="Nickname")
+              div.large-8.column
+                input(class="message-input",type="text",name="message",placeholder="Your message")
+              div.large-2.column
+                input.button.postfix.radius(type="submit",value="⏎")
       else if !tribune.require_user_authentication
-        input(type="text",name="nickname",placeholder="Nickname")
-        input(class="message-input",type="text",name="message",placeholder="Your message")
-        input(type="submit",value="⏎")
+        div.row
+          div.large-6.column
+            div.row.collapse
+              div.large-2.column
+                input(type="text",name="nickname",placeholder="Nickname")
+              div.large-8.column
+                input(class="message-input",type="text",name="message",placeholder="Your message")
+              div.large-2.column
+                input.postfix(type="submit",value="⏎")
       else
         span.please Please login to participate.

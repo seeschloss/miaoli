@@ -1,12 +1,21 @@
 include login.jade
 
 mixin tribune_create
-  p Create a tribune
-  form(method='post') with a 
-    button(type='submit', name='name', value='<random>') random name
-  form(method='post') or called 
-    input(name='name', placeholder='whatever')
-    button(type='submit') ⏎
+  div
+  form(method='post')
+    div.row
+      div.small-4.column Create a tribune 
+        button.radius(type='submit', name='name', value='<random>') with a random name
+      div.small-8.column
+        div.row
+          div.small-2.column
+            label.right.inline(for='name') or called
+          div.small-10.column
+            div.row.collapse
+              div.small-10.column
+                input.right-label(id='name',type='text',name='name', placeholder='whatever')
+              div.small-2.column
+                button.button.radius.postfix(type='submit') ⏎
 
 
 doctype html

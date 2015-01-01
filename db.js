@@ -16,6 +16,7 @@ function MiaoliDB(config) {
 MiaoliDB.prototype.saveUser = function(user, callback) {
   var db = this;
 
+  console.log("User " + user.miaoliId + " saved");
   this.redis.hmset('user:' + user.miaoliId, user, function(err, result) {
     db._users[user.miaoliId] = user;
     callback(err, user);
@@ -33,9 +34,9 @@ MiaoliDB.prototype.loadUser = function(miaoliId, callback) {
 
   this.redis.hgetall("user:" + miaoliId, function(err, user) {
     if (user) {
-      console.log("User found in db");
+      console.log("User " + miaoliId + " found in db");
     } else {
-      console.log("User not found in db");
+      console.log("User " + miaoliId + " not found in db");
     }
     db._users[miaoliId] = user;
 

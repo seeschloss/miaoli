@@ -74,7 +74,7 @@ Tribune.prototype.setup_inputs = function() {
     };
     puli.shortcuts[77] = {pre: '====><b> Moment ', post: '</b> <===='};
 
-    div.ownerDocument.querySelector('form').onsubmit = function(e) {
+    div.ownerDocument.querySelector('form#tribune-post').onsubmit = function(e) {
       e.preventDefault();
       tribune.post(puli.text(), tribune.nickname(), 'Anonymous');
       puli.clear();
@@ -117,7 +117,7 @@ Tribune.prototype.setup_events = function(elements) {
 };
 
 Tribune.prototype.nickname = function() {
-  return this.dom.querySelector('form').nickname.value;
+  return this.dom.querySelector('form#tribune-post').nickname.value;
 };
 
 Tribune.prototype.post = function(message, nickname, info) {

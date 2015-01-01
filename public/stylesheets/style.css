@@ -4,6 +4,13 @@ body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
+button {
+  padding: 5px 7px;
+}
+
+label {
+  color: black;
+}
 
 .top-bar {
   padding: 1em;
@@ -86,7 +93,6 @@ h1 a.config:hover {
 .config form li * {
   vertical-align: middle;
   margin-left: 0;
-  padding-left: 0;
 }
 
 .errors {
@@ -208,24 +214,22 @@ h1 a.config:hover {
 }
 
 .tribune [contenteditable].message {
-  margin-top: 2px;
-  width: 295px;
+  width: 100%;
   word-break: break-all;
   display: inline-block;
-  vertical-align: top;
-  padding: 4px 2px 0px 2px;
+  vertical-align: middle;
   border: 1px solid #CCCCCC;
-  border-radius: 2px;
-  min-height: 21px;
+  min-height: 2.3125rem;
   font-size: 14px;
+  padding: 3px;
 }
 
 .tribune input[name=nickname] {
-  margin: 2px;
   padding: 2px;
   border: 1px solid #CCCCCC;
   border-radius: 2px;
   width: 25px;
+  float: right;
   transition: width 0.2s ease;
   min-height: 21px;
   font-size: 14px;

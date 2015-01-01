@@ -32,6 +32,7 @@ User.prototype.checkPassword = function(password) {
   var crypto = require('crypto');
   var hash = crypto.createHash('sha256').update(password).digest('hex');
 
+  console.log("Password " + (hash == this.password ? "matches" : "does not match"));
   return hash == this.password;
 }
 
@@ -46,11 +47,11 @@ User.prototype.configFromPost = function(params, callback) {
     this.email = params['email'];
   }
 
-  if ('password' in params) {
+  if ('password' in params && params['password'] != "") {
     if ('password-confirm' in params) {
       if (params['password'] == params['password-confirm']) {
         var crypto = require('crypto');
-        user.password = crypto.createHash('sha256').update(params['password']).digest('hex');
+        this.password = crypto.createHash('sha256').update(params['password']).digest('hex');
       } else {
         return callback({message: 'The passwords do not match.'});
       }
