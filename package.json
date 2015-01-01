@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "test": "node test/all.js"
   },
   "dependencies": {
     "date-fu": "0.4.2",
@@ -19,5 +20,9 @@
     "redis": "*",
     "connect-redis": "2.1.0",
     "chance": "0.6.1"
+  },
+  "devDependencies": {
+    "test": ">=0.0.5",
+    "fakeredis": "*"
   }
 }

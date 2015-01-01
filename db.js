@@ -36,6 +36,10 @@ MiaoliDB.prototype.loadUser = function(miaoliId, callback) {
     if (user) {
       console.log("User " + miaoliId + " found in db");
     } else {
+      user = {
+        miaoliId: miaoliId,
+        displayName: miaoliId.substr(miaoliId.indexOf(':') + 1)
+      };
       console.log("User " + miaoliId + " not found in db");
     }
     db._users[miaoliId] = user;
