@@ -1,7 +1,6 @@
 // vim:et:sw=2
 
 var MiaoliDB = require('../db'),
-    User = require('../user'),
     fakeRedis = require('fakeredis');
 
 var oldPrototype = MiaoliDB.prototype;
@@ -36,6 +35,65 @@ exports['test saveUser with new user'] = function(assert, done) {
         assert.equal(user.password, '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 'User has right password');
         done();
       });
+    });
+  });
+};
+
+var createDummyUser = function(callback) {
+  db.loadUser('local:dummy', function(err, user) {
+    user.password = require('crypto').createHash('sha256').update("password").digest('hex');
+    db.saveUser(user, function(err) {
+      callback(user);
+    });
+  });
+};
+
+exports['test loadTribune with new tribune'] = function(assert, done) {
+  db.loadTribune('dummy', function(err, tribune) {
+    assert.equal(tribune.id, 'dummy', 'Tribune created with id set');
+    assert.equal(tribune.admin, null, 'Tribune has no admin');
+    assert.equal(tribune.posts.length, 0, 'Tribune has no post yet');
+    done();
+  });
+};
+
+exports['test saveTribune with new tribune'] = function(assert, done) {
+  db.loadTribune('dummy', function(err, tribune) {
+    tribune.title = 'Dummy tribune';
+    db.saveTribune(tribune, function(err, tribune) {
+      db.loadTribune('dummy', function(err, tribune) {
+        assert.equal(tribune.title, 'Dummy tribune', 'Tribune name has been correctly saved');
+        done();
+      });
+    });
+  });
+};
+
+var createDummyTribune = function(callback) {
+  db.loadTribune('dummy', function(err, tribune) {
+    db.saveTribune(tribune, function(err) {
+      callback(tribune);
+    });
+  });
+};
+
+var createDummyTribuneWithAdmin = function(callback) {
+  createDummyTribune(function(tribune) {
+    createDummyUser(function(user) {
+      user.tribunes = [tribune.id];
+      db.saveUserOwnedTribunes(user, user.tribunes, function() {
+        db.saveTribune(tribune, function(err) {
+          callback(tribune);
+        });
+      });
+    });
+  });
+};
+
+exports['test loadTribune with admin'] = function(assert, done) {
+  createDummyTribuneWithAdmin(function(tribune) {
+    db.loadTribune(tribune.id, function(err, tribune) {
+      done();
     });
   });
 };
