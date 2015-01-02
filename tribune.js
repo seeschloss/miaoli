@@ -3,6 +3,7 @@
 var Post = require("./post.js"),
     jade = require("jade"),
     async = require("async"),
+    logger = require('./logger'),
     Chance = require("chance");
 
 Tribune.load = function(req, res, next) {
@@ -43,7 +44,7 @@ Tribune.form_post = function(req, res, next) {
     return;
   }
 
-  console.log('New message for tribune ' + tribune.id + ":\n" + req.body.message);
+  logger.info('New message for tribune ' + tribune.id + ":\n" + req.body.message);
 
   async.waterfall([
     function(callback) {
@@ -118,7 +119,7 @@ Tribune.loadTribune = function(id, callback) {
   if (id in _tribunes) {
     callback(null, _tribunes[id]);
   } else {
-    console.log("Loaded tribune " + id);
+    logger.info("Loaded tribune " + id);
     (new Tribune(id)).load(callback);
   }
 };

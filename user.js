@@ -1,5 +1,7 @@
 // vim:et:sw=2
 
+var logger = require('./logger');
+
 var _users = {};
 
 function User(id, callback) {
@@ -32,7 +34,7 @@ User.prototype.checkPassword = function(password) {
   var crypto = require('crypto');
   var hash = crypto.createHash('sha256').update(password).digest('hex');
 
-  console.log("Password " + (hash == this.password ? "matches" : "does not match"));
+  logger.info("Password " + (hash == this.password ? "matches" : "does not match"));
   return hash == this.password;
 }
 

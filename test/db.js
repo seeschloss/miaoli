@@ -1,7 +1,10 @@
 // vim:et:sw=2
 
 var MiaoliDB = require('../db'),
+    logger = require('../logger'),
     fakeRedis = require('fakeredis');
+
+logger.transports.console.level = 'warn';
 
 var oldPrototype = MiaoliDB.prototype;
 MiaoliDB = function() {

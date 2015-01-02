@@ -15,6 +15,7 @@ var express = require('express')
   , passport = require('passport')
   , LocalStrategy = require('passport-local').Strategy
   , GoogleStrategy = require('passport-google-oauth').OAuth2Strategy
+  , logger = require('./logger')
   , path = require('path');
 
 var env = process.env.NODE_ENV || 'development';
@@ -161,17 +162,17 @@ Tribune.onNewPost = function(tribune, post) {
 
 io.sockets.on('connection', function(socket) {
   socket.on('post', function(post) {
-    console.log('Posting');
+    logger.info('Posting');
     Tribune.direct_post(post);
   });
 
   socket.on('join', function(tribune) {
-    console.log('Joining tribune ' + tribune);
+    logger.info('Joining tribune ' + tribune);
     socket.join(tribune);
   });
 });
 
 
 server.listen(app.get('port'), config.host, function(){
-  console.log('Express server listening on port ' + app.get('port'));
+  logger.info('Express server listening on port ' + app.get('port'));
 });

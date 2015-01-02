@@ -4,7 +4,8 @@ var redis = require("redis")
   , async = require("async")
   , Tribune = require('./tribune')
   , User = require('./user')
-  , Post = require('./post');
+  , Post = require('./post')
+  , logger = require('./logger');
 
 function MiaoliDB(config) {
   this.redis = redis.createClient(config.redis.port, config.redis.host);
@@ -16,7 +17,7 @@ function MiaoliDB(config) {
 MiaoliDB.prototype.saveUser = function(user, callback) {
   var db = this;
 
-  console.log("User " + user.miaoliId + " saved");
+  logger.info("User " + user.miaoliId + " saved");
   this.redis.hmset('user:' + user.miaoliId, user, function(err, result) {
     db._users[user.miaoliId] = user;
     callback(err, user);
@@ -24,9 +25,9 @@ MiaoliDB.prototype.saveUser = function(user, callback) {
 };
 
 MiaoliDB.prototype.loadUser = function(miaoliId, callback) {
-  console.log("Loading user " + miaoliId);
+  logger.info("Loading user " + miaoliId);
   if (miaoliId in this._users) {
-    console.log("User found in cache");
+    logger.info("User found in cache");
     return callback(null, this._users[miaoliId]);
   }
 
@@ -34,13 +35,13 @@ MiaoliDB.prototype.loadUser = function(miaoliId, callback) {
 
   this.redis.hgetall("user:" + miaoliId, function(err, user) {
     if (user) {
-      console.log("User " + miaoliId + " found in db");
+      logger.info("User " + miaoliId + " found in db");
     } else {
       user = {
         miaoliId: miaoliId,
         displayName: miaoliId.substr(miaoliId.indexOf(':') + 1)
       };
-      console.log("User " + miaoliId + " not found in db");
+      logger.info("User " + miaoliId + " not found in db");
     }
     db._users[miaoliId] = user;
 
@@ -57,14 +58,14 @@ MiaoliDB.prototype.loadUser = function(miaoliId, callback) {
 };
 
 MiaoliDB.prototype.loadUserOwnedTribunes = function(user, callback) {
-  console.log("Loading user " + user.miaoliId + " tribunes");
+  logger.info("Loading user " + user.miaoliId + " tribunes");
   var db = this;
   this.redis.lrange("user:" + user.miaoliId + ":tribunes", 0, -1, function(err, tribune_ids) {
     if (!tribune_ids) {
-      console.log("User has no tribune");
+      logger.info("User has no tribune");
       callback(err, []);
     } else {
-      console.log("User has " + tribune_ids.length + " tribunes");
+      logger.info("User has " + tribune_ids.length + " tribunes");
       async.parallel(tribune_ids
         .filter(function(tribune_id, i, arr) { return arr.lastIndexOf(tribune_id) === i; })
         .map(function(tribune_id) {
@@ -73,7 +74,7 @@ MiaoliDB.prototype.loadUserOwnedTribunes = function(user, callback) {
           };
         }),
         function(err, tribunes) {
-            console.log(tribunes);
+            logger.info(tribunes);
           if (tribunes.length != tribune_ids.length) {
             db.saveUserOwnedTribunes(user, tribunes.map(function(tribune) { return tribune.id; }), callback(err, tribunes));
           } else {
@@ -86,14 +87,14 @@ MiaoliDB.prototype.loadUserOwnedTribunes = function(user, callback) {
 };
 
 MiaoliDB.prototype.loadUserSubscribedTribunes = function(user, callback) {
-  console.log("Loading user " + user.miaoliId + " subscribed tribunes");
+  logger.info("Loading user " + user.miaoliId + " subscribed tribunes");
   var db = this;
   this.redis.lrange("user:" + user.miaoliId + ":subscribed", 0, -1, function(err, tribune_ids) {
     if (!tribune_ids) {
-      console.log("User has no tribune subscribed");
+      logger.info("User has no tribune subscribed");
       callback(err, []);
     } else {
-      console.log("User has " + tribune_ids.length + " tribunes subscribed");
+      logger.info("User has " + tribune_ids.length + " tribunes subscribed");
       async.parallel(tribune_ids
         .filter(function(tribune_id, i, arr) { return arr.lastIndexOf(tribune_id) === i; })
         .map(function(tribune_id) {
@@ -159,9 +160,9 @@ MiaoliDB.prototype.saveTribune = function(tribune, callback) {
 };
 
 MiaoliDB.prototype.loadTribune = function(tribuneId, callback) {
-  console.log("Loading tribune " + tribuneId);
+  logger.info("Loading tribune " + tribuneId);
   if (tribuneId in this._tribunes) {
-    console.log("Tribune found in cache");
+    logger.info("Tribune found in cache");
     return callback(null, this._tribunes[tribuneId]);
   }
 
@@ -170,9 +171,9 @@ MiaoliDB.prototype.loadTribune = function(tribuneId, callback) {
   this.redis.hgetall("tribune:" + tribuneId, function(err, tribune) {
     if (!tribune) {
       tribune = { };
-      console.log("Tribune not found in db");
+      logger.info("Tribune not found in db");
     } else {
-      console.log("Tribune found in db");
+      logger.info("Tribune found in db");
     }
 
     tribune.id = tribuneId;

@@ -19,7 +19,8 @@
     "jade": "*",
     "redis": "*",
     "connect-redis": "2.1.0",
-    "chance": "0.6.1"
+    "chance": "0.6.1",
+	"winston": ">=0.8.3"
   },
   "devDependencies": {
     "test": ">=0.0.5",
