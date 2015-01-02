@@ -221,24 +221,11 @@ MiaoliDB.prototype.savePost = function(post, callback) {
       message: post.message
     };
 
-    db.redis.rpush('posts:' + post.tribune.id + ':json', JSON.stringify(data));
-    db.redis.hmset('post:' + post.tribune.id + ':' + post.id, data);
-
-    callback(err, post);
-  });
-};
-
-MiaoliDB.prototype.addPostToTribune = function(post, tribune, callback) {
-  var db = this;
-
-  this.redis.rpush('posts:' + tribune.id, '', function(err, post_id) {
-    // Now we know the post's id
-    post.id = post_id;
-
-    db.redis.rpush('posts:' + tribune.id + ':json', JSON.stringify(post));
-    db.redis.hmset('post:' + tribune.id + ':' + post.id, post);
-
-    callback(err, post);
+    db.redis.rpush('posts:' + post.tribune.id + ':json', JSON.stringify(data), function(err) {
+      db.redis.hmset('post:' + post.tribune.id + ':' + post.id, data, function(err) {
+        callback(err, post);
+      });
+    });
   });
 };
 

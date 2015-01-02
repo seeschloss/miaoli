@@ -82,6 +82,7 @@ var createDummyTribuneWithAdmin = function(callback) {
     createDummyUser(function(user) {
       user.tribunes = [tribune.id];
       db.saveUserOwnedTribunes(user, user.tribunes, function() {
+        tribune.admin = user;
         db.saveTribune(tribune, function(err) {
           callback(tribune);
         });
@@ -93,6 +94,40 @@ var createDummyTribuneWithAdmin = function(callback) {
 exports['test loadTribune with admin'] = function(assert, done) {
   createDummyTribuneWithAdmin(function(tribune) {
     db.loadTribune(tribune.id, function(err, tribune) {
+      assert.equal(tribune.admin.miaoliId, 'local:dummy', 'Tribune admin has been loaded');
+      done();
+    });
+  });
+};
+
+var createDummyTribuneWithPosts = function(callback) {
+  createDummyTribune(function(tribune) {
+    db.savePost({
+      tribune: tribune,
+      nick: 'Plop',
+      info: 'Anonymous',
+      timestamp: '20150102115500',
+      message: 'plop _o/'
+    }, function(err, post) {
+      tribune.posts.push(post);
+      db.savePost({
+        tribune: tribune,
+        nick: 'Plop',
+        info: 'Anonymous',
+        timestamp: '20150102125100',
+        message: '11:55:00 \\o_'
+      }, function(err, post) {
+        tribune.posts.push(post);
+        callback(tribune);
+      });
+    });
+  });
+};
+
+exports['test loadTribune with posts'] = function(assert, done) {
+  createDummyTribuneWithPosts(function(tribune) {
+    db.loadTribune(tribune.id, function(err, tribune) {
+      assert.equal(tribune.posts.length, 2, 'Tribune posts have been loaded');
       done();
     });
   });
