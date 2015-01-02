@@ -2,8 +2,6 @@
 
 var logger = require('./logger');
 
-var _users = {};
-
 function User(id, callback) {
   this.miaoliId = id;
   this.password = null;
@@ -13,26 +11,26 @@ function User(id, callback) {
 }
 
 User.loadUser = function(miaoliId, callback) {
-  if (miaoliId in _users) {
-    callback(null, _users[miaoliId]);
-  } else {
-    global.db.loadUser(miaoliId, function(err, data) {
-      var user = new User(miaoliId);
+  global.db.loadUser(miaoliId, function(err, data) {
+    var user = new User(miaoliId);
 
-      for (key in data) {
-        if (data.hasOwnProperty(key)) {
-          user[key] = data[key];
-        }
+    for (key in data) {
+      if (data.hasOwnProperty(key)) {
+        user[key] = data[key];
       }
+    }
 
-      if (callback) {
-        callback(err, user);
-      }
-    });
-  }
+    if (callback) {
+      callback(err, user);
+    }
+  });
 };
 
 User.prototype.checkPassword = function(password) {
+  if (this.password === null) {
+    return true;
+  }
+
   var crypto = require('crypto');
   var hash = crypto.createHash('sha256').update(password).digest('hex');
 
@@ -52,7 +50,7 @@ User.prototype.configFromPost = function(params, callback) {
   }
 
   if ('password' in params && params['password'] != "") {
-    if ('password-confirm' in params) {
+    if ('password-confirm' in params && params['password-confirm'] != "") {
       if (params['password'] == params['password-confirm']) {
         var crypto = require('crypto');
         this.password = crypto.createHash('sha256').update(params['password']).digest('hex');

@@ -6,16 +6,8 @@ var MiaoliDB = require('../db'),
 
 logger.transports.console.level = 'warn';
 
-var oldPrototype = MiaoliDB.prototype;
-MiaoliDB = function() {
-  this.redis = fakeRedis.createClient("db tests");
-
-  this._users = {};
-  this._tribunes = {};
-};
-MiaoliDB.prototype = oldPrototype;
-
 var db = new MiaoliDB();
+db.redis = fakeRedis.createClient("db tests");
 global.db = db;
 
 exports['test loadUser with new user'] = function(assert, done) {

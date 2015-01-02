@@ -9,7 +9,9 @@ var redis = require("redis")
 
 /* istanbul ignore next */
 function MiaoliDB(config) {
-  this.redis = redis.createClient(config.redis.port, config.redis.host);
+  if (config !== undefined && "redis" in config) {
+    this.redis = redis.createClient(config.redis.port, config.redis.host);
+  }
 
   this._users = {};
   this._tribunes = {};
