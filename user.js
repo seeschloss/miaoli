@@ -6,6 +6,8 @@ var _users = {};
 
 function User(id, callback) {
   this.miaoliId = id;
+  this.password = null;
+  this.email = "";
   this.tribunes = [];
   this.subscribed = [];
 }

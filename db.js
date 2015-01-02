@@ -7,6 +7,7 @@ var redis = require("redis")
   , Post = require('./post')
   , logger = require('./logger');
 
+/* istanbul ignore next */
 function MiaoliDB(config) {
   this.redis = redis.createClient(config.redis.port, config.redis.host);
 
@@ -14,11 +15,16 @@ function MiaoliDB(config) {
   this._tribunes = {};
 }
 
+MiaoliDB.prototype.clearCache = function() {
+  this._users = {};
+  this._tribunes = {};
+};
+
 MiaoliDB.prototype.saveUser = function(user, callback) {
   var db = this;
 
   logger.info("User " + user.miaoliId + " saved");
-  this.redis.hmset('user:' + user.miaoliId, user, function(err, result) {
+  this.redis.hmset('user:' + user.miaoliId, user, function(err) {
     db._users[user.miaoliId] = user;
     callback(err, user);
   });
@@ -61,7 +67,7 @@ MiaoliDB.prototype.loadUserOwnedTribunes = function(user, callback) {
   logger.info("Loading user " + user.miaoliId + " tribunes");
   var db = this;
   this.redis.lrange("user:" + user.miaoliId + ":tribunes", 0, -1, function(err, tribune_ids) {
-    if (!tribune_ids) {
+    if (!tribune_ids || tribune_ids.length == 0) {
       logger.info("User has no tribune");
       callback(err, []);
     } else {
@@ -76,7 +82,9 @@ MiaoliDB.prototype.loadUserOwnedTribunes = function(user, callback) {
         function(err, tribunes) {
             logger.info(tribunes);
           if (tribunes.length != tribune_ids.length) {
-            db.saveUserOwnedTribunes(user, tribunes.map(function(tribune) { return tribune.id; }), callback(err, tribunes));
+            db.saveUserOwnedTribunes(user, tribunes.map(function(tribune) { return tribune.id; }), function(err) {
+              callback(err, tribunes);
+            });
           } else {
             callback(err, tribunes);
           }
@@ -90,7 +98,7 @@ MiaoliDB.prototype.loadUserSubscribedTribunes = function(user, callback) {
   logger.info("Loading user " + user.miaoliId + " subscribed tribunes");
   var db = this;
   this.redis.lrange("user:" + user.miaoliId + ":subscribed", 0, -1, function(err, tribune_ids) {
-    if (!tribune_ids) {
+    if (!tribune_ids || tribune_ids.length == 0) {
       logger.info("User has no tribune subscribed");
       callback(err, []);
     } else {
@@ -104,7 +112,9 @@ MiaoliDB.prototype.loadUserSubscribedTribunes = function(user, callback) {
         }),
         function(err, tribunes) {
           if (tribunes.length != tribune_ids.length) {
-            db.saveUserSubscribedTribunes(user, tribunes.map(function(tribune) { return tribune.id; }), callback(err, tribunes));
+            db.saveUserSubscribedTribunes(user, tribunes.map(function(tribune) { return tribune.id; }), function(err) {
+              callback(err, tribunes);
+            });
           } else {
             callback(err, tribunes);
           }
@@ -118,10 +128,12 @@ MiaoliDB.prototype.saveUserSubscribedTribunes = function(user, tribune_ids, call
   var db = this;
 
   this.redis.ltrim('user:' + user.miaoliId + ':subscribed', -1, 0, function(err, result) {
-    tribune_ids.forEach(function(tribune_id) {
-      db.addUserSubscribedTribune(user, tribune_id);
+    async.each(tribune_ids, function(tribune_id, done) {
+      db.addUserSubscribedTribune(user, tribune_id, done);
+    }, function(err) {
+      user.subscribed = tribune_ids;
+      callback(err);
     });
-    callback(err, tribune_ids);
   });
 }
 
@@ -129,10 +141,12 @@ MiaoliDB.prototype.saveUserOwnedTribunes = function(user, tribune_ids, callback)
   var db = this;
 
   this.redis.ltrim('user:' + user.miaoliId + ':tribunes', -1, 0, function(err, result) {
-    tribune_ids.forEach(function(tribune_id) {
-      db.addUserOwnedTribune(user, tribune_id);
+    async.each(tribune_ids, function(tribune_id, done) {
+      db.addUserOwnedTribune(user, tribune_id, done);
+    }, function(err) {
+      user.tribunes = tribune_ids;
+      callback(err);
     });
-    callback(err, tribune_ids);
   });
 }
 

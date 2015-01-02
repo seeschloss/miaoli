@@ -43,7 +43,7 @@ function Post(tribune, data, callback) {
 
   this.tribune = tribune;
 
-  if (this.user && !isObject(this.user)) {
+  if (this.user && this.user !== Object(this.user)) {
     var post = this;
 
     global.db.loadUser(this.user, function(err, user) {
