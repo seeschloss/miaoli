@@ -20,8 +20,6 @@ Tribune.load = function(req, res, next) {
   });
 };
 
-var _tribunes = {};
-
 Tribune.create = function(name, callback) {
   var id = name;
 
@@ -116,12 +114,8 @@ function Tribune(id) {
 };
 
 Tribune.loadTribune = function(id, callback) {
-  if (id in _tribunes) {
-    callback(null, _tribunes[id]);
-  } else {
-    logger.info("Loaded tribune " + id);
-    (new Tribune(id)).load(callback);
-  }
+  logger.info("Loaded tribune " + id);
+  (new Tribune(id)).load(callback);
 };
 
 Tribune.prototype.load = function(callback) {
@@ -155,13 +149,13 @@ Tribune.prototype.configFromPost = function(params, callback) {
     this.title = params['title'];
   }
 
-  if ('user-authentication' in params) {
+  if ('user-authentication' in params && params['user-authentication']) {
     this.require_user_authentication = true;
   } else {
     this.require_user_authentication = false;
   }
 
-  if ('anonymous' in params) {
+  if ('anonymous' in params && params['anonymous']) {
     this.anonymous = true;
   } else {
     this.anonymous = false;
@@ -207,7 +201,10 @@ Tribune.prototype.post = function(data, callback) {
   var tribune = this;
 
   var post = new Post(this, data);
-  post.save(callback);
+  post.save(function(err) {
+    tribune.posts.push(post);
+    callback(err, post);
+  });
 };
 
 module.exports = Tribune;

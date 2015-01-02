@@ -166,13 +166,15 @@ MiaoliDB.prototype.addUserOwnedTribune = function(user, tribune_id, callback) {
 
 MiaoliDB.prototype.saveTribune = function(tribune, callback) {
   var data = {
-    admin: tribune.admin ? tribune.admin.miaoliId : null,
+    admin: tribune.admin ? tribune.admin.miaoliId : "",
     title: tribune.title,
-    require_user_authentication: tribune.require_user_authentication
+    require_user_authentication: +tribune.require_user_authentication
   };
 
   this._tribunes[tribune.id] = tribune;
-  this.redis.hmset("tribune:" + tribune.id, data, callback);
+  this.redis.hmset("tribune:" + tribune.id, data, function(err) {
+    callback(err, tribune);
+  });
 };
 
 MiaoliDB.prototype.loadTribune = function(tribuneId, callback) {
@@ -193,18 +195,20 @@ MiaoliDB.prototype.loadTribune = function(tribuneId, callback) {
     }
 
     tribune.id = tribuneId;
+    tribune.require_user_authentication = !!+tribune.require_user_authentication;
 
     db._tribunes[tribuneId] = tribune;
 
     db.loadTribunePosts(tribune, 20, function(err, posts) {
       tribune.posts = posts;
 
-      if (tribune.admin) {
+      if (tribune.admin && tribune.admin != "") {
         db.loadUser(tribune.admin, function(err, user) {
           tribune.admin = user;
           callback(err, tribune);
         });
       } else {
+        tribune.admin = null;
         callback(err, tribune);
       }
     });
