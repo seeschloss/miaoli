@@ -145,16 +145,24 @@ exports['test post'] = function(assert, done) {
   });
 };
 
-exports['test create'] = function(assert, done) {
-  Tribune.create('dummy', function(err, tribune) {
+exports['test createName'] = function(assert, done) {
+  Tribune.createName('dummy', function(err, tribune) {
     assert.equal(tribune.id, 'dummy', 'Tribune has been created with given title');
 
     done();
   });
 };
 
-exports['test create random title'] = function(assert, done) {
-  Tribune.create('<random>', function(err, tribune) {
+exports['test createName with sanitization'] = function(assert, done) {
+  Tribune.createName('dummy:plop/prout', function(err, tribune) {
+    assert.equal(tribune.id, 'dummyplopprout', 'Tribune has been created with sane title');
+
+    done();
+  });
+};
+
+exports['test createName with random name'] = function(assert, done) {
+  Tribune.createName('<random>', function(err, tribune) {
     assert.ok(tribune.id.length > 0, 'Tribune has been created with a random title');
     assert.notEqual(tribune.id, '<random>', 'Tribune has been created with a random title');
 

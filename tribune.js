@@ -6,7 +6,7 @@ var Post = require("./post.js"),
     logger = require('./logger'),
     Chance = require("chance");
 
-Tribune.randomName = function(name, callback) {
+Tribune.createName = function(name, callback) {
   var id = name;
 
   if (name == '<random>') {
