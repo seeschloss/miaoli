@@ -11,7 +11,8 @@ block content
       if tribune.admin && user && tribune.admin.miaoliId == user.miaoliId
         a.config(href=tribune.config_url) configure
     ol.posts
-      each post in tribune.posts
+      - var posts = tribune.posts.sort(tribune.sort_posts)
+      each post in posts
         include post
 
     form#tribune-post(action=tribune.post_url,method="post")
