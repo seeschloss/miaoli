@@ -55,7 +55,6 @@ Tribune.form_post = function(req, res, next) {
       }, callback);
     },
     function(post, callback) {
-      tribune.posts.push(post);
       tribune.render_post(post, callback);
     },
     function(str, callback) {
@@ -79,7 +78,6 @@ Tribune.direct_post = function(post_data) {
       tribune.post(post_data, callback);
     },
     function(post, callback) {
-      tribune.posts.push(post);
       tribune.render_post(post, callback);
     },
     function(str, callback) {
@@ -180,7 +178,7 @@ Tribune.prototype.xml = function() {
   // No need to write an XML formatter for this
   var xml = '<board site="' + this.url + '">\n';
 
-  this.posts.reverse().forEach(function(post) {
+  this.posts.sort(this.sort_posts).reverse().forEach(function(post) {
     xml += ' <post id="' + post.id + '" time="' + post.tribune_timestamp() + '">\n';
     xml += '  <info>' + post.info + '</info>\n';
     xml += '  <login>' + (post.user != undefined ? post.user.name : '') + '</login>\n';
@@ -194,7 +192,7 @@ Tribune.prototype.xml = function() {
 };
 
 Tribune.prototype.sort_posts = function(a, b) {
-  return a.data.id > b.data.id ? 1 : -1;
+  return a.id > b.id ? 1 : -1;
 };
 
 Tribune.prototype.post = function(data, callback) {
