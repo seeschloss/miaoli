@@ -100,43 +100,7 @@ passport.deserializeUser(function(miaoliId, done) {
   return User.loadUser(miaoliId, done);
 });
 
-
-app.get('/', routes.home);
-app.post('/', function(req, res) { Tribune.create(req.body.name, function(err, tribune) {res.redirect(302, '/tribune/' + tribune.id);}); });
-
-app.all('/tribune/:id', Tribune.load);
-app.all('/tribune/:id/*', Tribune.load);
-
-app.get('/user', routes.user_home);
-app.get('/user/config', routes.user_config);
-app.post('/user/config', function(req, res) {
-  if (req.user) {
-    req.user.configFromPost(req.body, function(err) {
-      if (err) {
-        req.formErrors = err;
-        routes.user_config(req, res);
-      } else {
-        res.redirect(302, '/user');
-      }
-    });
-  } else {
-    res.redirect(302, '/');
-  }
-});
-
-app.get('/tribune/:id', routes.tribune);
-
-app.get('/tribune/:id/config', routes.tribune_config);
-app.post('/tribune/:id/config', function(req, res) {
-  if (req.user.miaoliId === req.tribune.admin.miaoliId) {
-    req.tribune.configFromPost(req.body, function() {});
-  };
-  res.redirect(302, '/tribune/' + req.tribune.id);
-});
-
-app.post('/tribune/:id/post', Tribune.form_post);
-app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml'); res.send(201, req.tribune.xml()); });
-app.get('/tribune/:id/xml', Tribune.xml);
+routes.setup(app);
 
 app.get('/auth/logout', function (req, res) { req.logout(); res.redirect('/'); });
 app.get('/tribune/:id/logout', function (req, res) { req.logout(); res.redirect('/tribune/' + req.params.id); });

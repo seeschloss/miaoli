@@ -6,21 +6,7 @@ var Post = require("./post.js"),
     logger = require('./logger'),
     Chance = require("chance");
 
-Tribune.load = function(req, res, next) {
-  var id = req.params.id.replace(/:/g, '');
-
-  Tribune.loadTribune(id, function(err, tribune) {
-    req.tribune = tribune;
-
-    if (tribune.admin === null && tribune.posts.length == 0 && req.user) {
-      tribune.setAdmin(req.user, function(err) {next();});
-    } else {
-      next();
-    }
-  });
-};
-
-Tribune.create = function(name, callback) {
+Tribune.randomName = function(name, callback) {
   var id = name;
 
   if (name == '<random>') {
@@ -30,7 +16,7 @@ Tribune.create = function(name, callback) {
     id = name.replace(/[\s\\\/:?&#]/g, '');
   }
 
-  Tribune.loadTribune(id, callback);
+  return id;
 };
 
 Tribune.form_post = function(req, res, next) {
@@ -85,11 +71,6 @@ Tribune.direct_post = function(post_data) {
       callback(null);
     }
   ]);
-};
-
-Tribune.xml = function(req, res, next) {
-  res.set('Content-Type', 'application/xml');
-  res.send(200, req.tribune.xml());
 };
 
 function Tribune(id) {
