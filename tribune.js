@@ -9,7 +9,7 @@ var Post = require("./post.js"),
 Tribune.createName = function(name, callback) {
   var id = name;
 
-  if (name == '<random>') {
+  if (name == null) {
     var chance = new Chance();
     id = chance.word({syllables: 3});
   } else {
