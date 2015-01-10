@@ -48,8 +48,8 @@ if ('development' == env) {
   app.use(express.errorHandler());
 }
 
-routes.setup(app);
 auth.setup(app, config);
+routes.setup(app);
 
 io = io.listen(server, { log: false });
 
