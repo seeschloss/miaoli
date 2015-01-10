@@ -114,12 +114,14 @@ h1 a.config:hover {
 
 .totoz {
   color: #00B7FF;
+  cursor: default;
 }
 
 .totoz img {
   margin-left: 5px;
   visibility: hidden;
   position: absolute;
+  z-index: 999;
 }
 
 .totoz:hover img {
