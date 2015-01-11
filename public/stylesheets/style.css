@@ -4,6 +4,10 @@ body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
+body > .row {
+  padding-bottom: 3em;
+}
+
 button {
   padding: 5px 7px;
 }
@@ -128,6 +132,10 @@ h1 a.config:hover {
   visibility: visible;
 }
 
+.tribune {
+  padding: 1em;
+}
+
 .tribune [contenteditable].message .url {
   color: #00B7FF;
   text-decoration: underline;
@@ -154,6 +162,7 @@ h1 a.config:hover {
 .tribune ol {
   list-style-type: none;
   padding: 0;
+  margin: 0;
 }
 
 .tribune li {
@@ -215,6 +224,28 @@ h1 a.config:hover {
 .tribune.iframe {
   margin: 0;
   padding: 2px;
+}
+
+.tribune #tribune-post {
+  margin-top: 2em;
+}
+
+.tribune #tribune-post .tags {
+  font-size: x-small;
+  color: #555;
+}
+
+.tribune #tribune-post .user:after {
+  content: '';
+}
+
+.tribune #tribune-post .tags button {
+  margin: auto;
+  font-size: 100%;
+  padding: 2px;
+  background: none;
+  color: #00B7FF;
+  border: 1px solid #DDD;
 }
 
 .tribune [contenteditable].message {

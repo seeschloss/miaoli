@@ -38,6 +38,8 @@ function Tribune(dom) {
   this.id = dom.dataset.tribuneId;
   this.max_posts = +dom.dataset.maxPosts;
 
+  this.token = dom.dataset.token;
+
   this.setup_inputs();
   this.setup_events();
 }
@@ -80,6 +82,18 @@ Tribune.prototype.setup_inputs = function() {
       puli.clear();
     };
 
+    var shortcuts = this.dom.querySelectorAll('#tribune-post .tags button');
+    for (var j = 0; j < shortcuts.length; j++) {
+      var button = shortcuts.item(j);
+      button.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        puli.div.focus();
+        puli.wrapSelectionWithTag(this.dataset.tag);
+      };
+    }
+
     input.parentNode.replaceChild(div, input);
   }
 };
@@ -117,7 +131,12 @@ Tribune.prototype.setup_events = function(elements) {
 };
 
 Tribune.prototype.nickname = function() {
-  return this.dom.querySelector('form#tribune-post').nickname.value;
+  var field = this.dom.querySelector('form#tribune-post').nickname;
+  if (field) {
+    return field.value;
+  } else {
+    return null;
+  }
 };
 
 Tribune.prototype.post = function(message, nickname, info) {
@@ -206,7 +225,11 @@ var element = document.querySelector('.tribune');
 if (element) {
   var tribune = new Tribune(element);
   var socket = io.connect();
-  socket.emit('join', tribune.id);
+
+  socket.on('connect', function() {
+    socket.emit('token', tribune.token);
+    socket.emit('join', tribune.id);
+  });
 
   socket.on('new-post', function(data) {
     if (data.tribune == tribune.id){

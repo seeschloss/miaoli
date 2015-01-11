@@ -42,7 +42,14 @@ exports.setup = function(app) {
   app.get('/', function(req, res) { res.render('home', { title: 'Home', user: req.user }); });
   app.post('/', function(req, res) { res.redirect(302, '/tribune/' + Tribune.createName(req.body.random ? null : req.body.name.toString())); });
 
-  app.get('/tribune/:id', function(req, res) { res.render('tribune', { title: req.tribune.title, tribune: req.tribune, user: req.user }); });
+  app.get('/tribune/:id', function(req, res) {
+    res.render('tribune', {
+      title: req.tribune.title,
+      tribune: req.tribune,
+      user: req.user,
+      token: req.sessionID
+    });
+  });
 
   app.all('/tribune/:id/config', require_tribune_admin);
   app.post('/tribune/:id/config', function(req, res) { req.tribune.configFromPost(req.body, function(err) {res.redirect(302, '/tribune/' + req.tribune.id);}); });

@@ -1,7 +1,7 @@
 extends layout
 
 block content
-  div.tribune(data-tribune-id=tribune.id,data-max-posts=tribune.max_posts)
+  div.tribune(data-tribune-id=tribune.id,data-max-posts=tribune.max_posts,data-token=token)
     h1= title
       if user
         form
@@ -17,15 +17,18 @@ block content
 
     form#tribune-post(action=tribune.post_url,method="post")
       if user
+        div.row.collapse
+          div.large-11.column
+            input(class="message-input",type="text",name="message",placeholder="Your message")
+          div.large-1.column
+            input.button.radius.postfix(type="submit",value="⏎")
         div.row
-          div.large-6.column
-            div.row.collapse
-              div.large-2.column
-                input.prefix(type="text",name="nickname",value=user.displayName,disabled="disabled",readonly="readonly",placeholder="Nickname")
-              div.large-8.column
-                input(class="message-input",type="text",name="message",placeholder="Your message")
-              div.large-2.column
-                input.button.postfix.radius(type="submit",value="⏎")
+          div.large-6.column You are posting as <span class="user">#{user.displayName}</span>
+          div.large-6.column.tags
+            div.row
+              div.large-12.column Allowed tags are <button data-tag="i">&lt;i&gt; (<i>italic</i>)</button>, <button data-tag="b">&lt;b&gt; (<b>bold</b>)</button>, <button data-tag="u">&lt;u&gt; (<u>underline</u>)</button>, <button data-tag="s">&lt;s&gt; (<s>stroke</s>)</button>
+            div.row
+              div.large-12.column Links beginning with "<a>http</a>" will be minimized and shown as <a>[url]</a>
       else if !tribune.require_user_authentication
         div.row
           div.large-6.column

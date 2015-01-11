@@ -24,6 +24,12 @@ global.db = new MiaoliDB(config);
 var app = express();
 var server = http.createServer(app);
 
+var sessionStore = new RedisStore({
+  'host': config.redis.host,
+  'port': config.redis.port,
+  'prefix': 'session'
+});
+
 // all environments
 app.set('port', config.port);
 app.set('views', __dirname + '/views');
@@ -35,11 +41,7 @@ app.use(express.bodyParser());
 //app.use(express.methodOverride());
 app.use(express.session({
   secret: config.secret,
-  store: new RedisStore({
-    'host': config.redis.host,
-    'port': config.redis.port,
-    'prefix': 'session'
-  })
+  store: sessionStore
 }));
 app.use('/public', express.static(__dirname + '/public'));
 
@@ -60,12 +62,26 @@ Tribune.onNewPost = function(tribune, post) {
 io.sockets.on('connection', function(socket) {
   socket.on('post', function(post) {
     logger.info('Posting');
+    post.user = socket.user;
+    if (post.user) {
+      post.nick = post.user.displayName;
+    }
     Tribune.direct_post(post);
   });
 
   socket.on('join', function(tribune) {
     logger.info('Joining tribune ' + tribune);
     socket.join(tribune);
+  });
+
+  socket.on('token', function(token) {
+    sessionStore.get(token, function(err, session) {
+      if (session && session.passport && session.passport.user) {
+        User.loadUser(session.passport.user, function(err, user) {
+          socket.user = user;
+        });
+      }
+    });
   });
 });
 

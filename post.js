@@ -62,7 +62,7 @@ function Post(tribune, data, callback) {
 
 Post.prototype.nickname = function() {
   if (undefined != this.user) {
-    return this.user.name;
+    return this.user.displayName;
   } else if (undefined != this.nick && this.nick.length > 0) {
     return this.nick.substr(0, 15);
   } else if (undefined != this.info) {
