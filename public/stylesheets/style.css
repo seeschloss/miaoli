@@ -260,20 +260,13 @@ h1 a.config:hover {
   padding: 3px;
 }
 
-.tribune input[name=nickname] {
-  padding: 2px;
-  border: 1px solid #CCCCCC;
-  border-radius: 2px;
-  width: 25px;
-  float: right;
-  transition: width 0.2s ease;
-  min-height: 21px;
-  font-size: 14px;
+.tribune label[for=nickname] {
+  line-height: 4ex;
+  height: 4ex;
 }
 
-.tribune input[name=nickname]:focus {
-  border: 1px solid #333333;
-  width: 100px;
+.tribune input[name=nickname] {
+  height: 4ex;
 }
 
 .tribune input[name=message] {
