@@ -157,12 +157,13 @@ Tribune.prototype.render_post = function(post, callback) {
 
 Tribune.prototype.xml = function() {
   // No need to write an XML formatter for this
-  var xml = '<board site="' + this.url + '">\n';
+  var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+  xml += '<board site="' + this.url + '">\n';
 
   this.posts.sort(this.sort_posts).reverse().forEach(function(post) {
     xml += ' <post id="' + post.id + '" time="' + post.tribune_timestamp() + '">\n';
     xml += '  <info>' + post.info + '</info>\n';
-    xml += '  <login>' + (post.user != undefined ? post.user.name : '') + '</login>\n';
+    xml += '  <login>' + (post.user != undefined && post.user.name != undefined ? post.user.name : '') + '</login>\n';
     xml += '  <message>' + post.message_xml() + '</message>\n';
     xml += ' </post>\n';
   });
