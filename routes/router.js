@@ -56,8 +56,8 @@ exports.setup = function(app) {
   app.all('/tribune/:id/config', function(req, res) { res.render('tribune-config', { title: req.tribune.title, tribune: req.tribune, user: req.user, errors: req.formErrors }); });
 
   app.post('/tribune/:id/post', Tribune.form_post);
-  app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml'); res.send(201, req.tribune.xml()); });
-  app.get('/tribune/:id/xml', function(req, res) { res.set('Content-Type', 'application/xml'); res.send(200, req.tribune.xml()); });
+  app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml, charset=utf8'); res.send(201, req.tribune.xml()); });
+  app.get('/tribune/:id/xml', function(req, res) { res.set('Content-Type', 'application/xml, charset=utf8'); res.send(200, req.tribune.xml()); });
 
   app.get('/user', function(req, res) { res.render('user-home', { user: req.user }); });
   app.post('/user/config', function(req, res, next) {
