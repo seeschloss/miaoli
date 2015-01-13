@@ -235,8 +235,8 @@ MiaoliDB.prototype.savePost = function(post, callback) {
 
     var data = {
       id: post.id,
-      user: post.user ? post.user.miaoliId : null,
-      nick: post.nick,
+      user: post.user ? post.user.miaoliId : "",
+      nick: post.nick ? post.nick : "",
       info: post.info,
       timestamp: post.timestamp,
       message: post.message

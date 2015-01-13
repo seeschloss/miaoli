@@ -4,7 +4,8 @@ var MiaoliDB = require('../db'),
     logger = require('../logger'),
     fakeRedis = require('fakeredis'),
     Tribune = require('../tribune')
-    User = require('../user');
+    User = require('../user')
+    async = require('async');
 
 logger.transports.console.level = 'warn';
 
@@ -127,6 +128,27 @@ exports['test configFromPost with other values'] = function(assert, done) {
   });
 };
 
+exports['test latest_posts'] = function(assert, done) {
+  createDummyTribune(function(tribune) {
+    async.times(25, function(n, next) {
+      tribune.post({
+        info: 'Mozilla/42',
+        timestamp: "20140102223400",
+        message: 'Plop _o/ ' + n
+      }, function(err, post) {
+        next(null);
+      });
+    }, function(err) {
+      assert.equal(tribune.latest_posts().length, 20, "Latest posts list is kept to 20 posts");
+      var posts = tribune.latest_posts();
+      assert.equal(posts[0].message, "Plop _o/ 5", "Posts are correctly ordered");
+      assert.equal(posts[posts.length - 1].message, "Plop _o/ 24", "Posts are correctly ordered");
+
+      done();
+    });
+  });
+};
+
 exports['test post'] = function(assert, done) {
   createDummyTribune(function(tribune) {
     tribune.post({
@@ -134,6 +156,7 @@ exports['test post'] = function(assert, done) {
         timestamp: '20140102223400',
         message: 'Plop _o/'
       }, function(err) {
+        assert.equal(err, null, "Post was correctly inserted");
         assert.equal(tribune.posts.length, 1, 'Post has been appended to tribune');
 
         Tribune.loadTribune(tribune.id, function(err, tribune) {
