@@ -11,7 +11,7 @@ block content
       if tribune.admin && user && tribune.admin.miaoliId == user.miaoliId
         a.config(href=tribune.config_url) configure
     ol.posts
-      - var posts = tribune.posts.sort(tribune.sort_posts)
+      - var posts = tribune.latest_posts()
       each post in posts
         include post
 

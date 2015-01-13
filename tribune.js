@@ -160,7 +160,7 @@ Tribune.prototype.xml = function() {
   var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
   xml += '<board site="' + this.url + '">\n';
 
-  this.posts.sort(this.sort_posts).reverse().forEach(function(post) {
+  this.latest_posts().reverse().forEach(function(post) {
     xml += ' <post id="' + post.id + '" time="' + post.tribune_timestamp() + '">\n';
     xml += '  <info>' + post.info + '</info>\n';
     xml += '  <login>' + (post.user != undefined && post.user.name != undefined ? post.user.name : '') + '</login>\n';
@@ -171,6 +171,12 @@ Tribune.prototype.xml = function() {
   xml += '</board>\n';
 
   return xml;
+};
+
+Tribune.prototype.latest_posts = function() {
+  this.posts.sort(this.sort_posts);
+  this.posts = this.posts.slice(-20);
+  return this.posts;
 };
 
 Tribune.prototype.sort_posts = function(a, b) {
