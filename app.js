@@ -5,6 +5,8 @@
 
 var express = require('express')
   , session = require('express-session')
+  , bodyParser = require('body-parser')
+  , cookieParser = require('cookie-parser')
   , RedisStore = require('connect-redis')(session)
   , routes = require('./routes/router')
   , auth = require('./auth')
@@ -34,21 +36,15 @@ var sessionStore = new RedisStore({
 app.set('port', config.port);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
-app.use(express.favicon());
-app.use(express.logger('dev'));
-app.use(express.cookieParser());
-app.use(express.bodyParser());
-//app.use(express.methodOverride());
-app.use(express.session({
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser(config.secret));
+app.use(session({
   secret: config.secret,
-  store: sessionStore
+  store: sessionStore,
+  resave: true,
+  saveUninitialized: true
 }));
 app.use('/public', express.static(__dirname + '/public'));
-
-// development only
-if ('development' == env) {
-  app.use(express.errorHandler());
-}
 
 auth.setup(app, config);
 routes.setup(app);

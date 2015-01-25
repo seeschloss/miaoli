@@ -28,7 +28,7 @@ exports['test loadTribune with new tribune'] = function(assert, done) {
 var createDummyTribune = function(callback) {
   db.redis.flushdb();
   db.clearCache();
-  Tribune.loadTribune('dummy', function(err, tribune) {
+  Tribune.loadTribune('dummy'+Math.random(), function(err, tribune) {
     tribune.title = 'Dummy tribune';
     tribune.save(function(err) {
       db.clearCache();
@@ -158,6 +158,7 @@ exports['test post'] = function(assert, done) {
       }, function(err) {
         assert.equal(err, null, "Post was correctly inserted");
         assert.equal(tribune.posts.length, 1, 'Post has been appended to tribune');
+        console.log(tribune.posts);
 
         Tribune.loadTribune(tribune.id, function(err, tribune) {
           assert.equal(tribune.posts.length, 1, 'Post has been saved and loaded');

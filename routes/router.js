@@ -21,7 +21,7 @@ exports.setup = function(app) {
     if (req.user) {
       next();
     } else {
-      res.send(403);
+      res.sendStatus(403);
     }
   };
 
@@ -29,7 +29,7 @@ exports.setup = function(app) {
     if (req.user && req.tribune && req.tribune.admin && req.tribune.admin.miaoliId === req.user.miaoliId) {
       next();
     } else {
-      res.send(403);
+      res.sendStatus(403);
     }
   };
 
@@ -39,7 +39,7 @@ exports.setup = function(app) {
   app.all('/user', require_logged_user);
   app.all('/user/*', require_logged_user);
 
-  app.get('/', function(req, res) { res.render('home', { title: 'Home', user: req.user }); });
+  app.get('/', function(req, res) { console.log(req.session); res.render('home', { title: 'Home', user: req.user }); });
   app.post('/', function(req, res) { res.redirect(302, '/tribune/' + Tribune.createName(req.body.random ? null : req.body.name.toString())); });
 
   app.get('/tribune/:id', function(req, res) {
@@ -56,8 +56,8 @@ exports.setup = function(app) {
   app.all('/tribune/:id/config', function(req, res) { res.render('tribune-config', { title: req.tribune.title, tribune: req.tribune, user: req.user, errors: req.formErrors }); });
 
   app.post('/tribune/:id/post', Tribune.form_post);
-  app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml, charset=utf8'); res.send(201, req.tribune.xml()); });
-  app.get('/tribune/:id/xml', function(req, res) { res.set('Content-Type', 'application/xml, charset=utf8'); res.send(200, req.tribune.xml()); });
+  app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml; charset=utf8'); res.status(201).send(req.tribune.xml()); });
+  app.get('/tribune/:id/xml', function(req, res) { res.set('Content-Type', 'application/xml; charset=utf8'); res.status(200).send(req.tribune.xml()); });
 
   app.get('/user', function(req, res) { res.render('user-home', { user: req.user }); });
   app.post('/user/config', function(req, res, next) {
