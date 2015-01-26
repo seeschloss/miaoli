@@ -43,9 +43,8 @@ function Post(tribune, data, callback) {
 
   this.tribune = tribune;
 
+  var post = this;
   if (this.user && this.user !== Object(this.user)) {
-    var post = this;
-
     global.db.loadUser(this.user, function(err, user) {
       post.user = user;
 
@@ -55,7 +54,7 @@ function Post(tribune, data, callback) {
     });
   } else {
     if (callback) {
-      callback(err, post);
+      callback(null, post);
     }
   }
 }

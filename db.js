@@ -219,10 +219,17 @@ MiaoliDB.prototype.loadTribunePosts = function(tribune, n, callback) {
   var db = this;
 
   this.redis.lrange('posts:' + tribune.id + ':json', -1 * n, -1, function(err, json_posts) {
-    var posts = json_posts
-      .map(function(json_post) { return new Post(tribune, json_post); })
-      .sort(tribune.sort_posts);
-    callback(err, posts);
+
+    var posts = [];
+    async.each(json_posts, function(json_post, done) {
+      new Post(tribune, json_post, function(err, post) {
+        posts.push(post);
+        done(err);
+      });
+    }, function(err) {
+      posts.sort(tribune.sort_posts);
+      callback(err, posts);
+    });
   });
 };
 

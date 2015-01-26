@@ -39,7 +39,7 @@ exports.setup = function(app) {
   app.all('/user', require_logged_user);
   app.all('/user/*', require_logged_user);
 
-  app.get('/', function(req, res) { console.log(req.session); res.render('home', { title: 'Home', user: req.user }); });
+  app.get('/', function(req, res) { res.render('home', { title: 'Home', user: req.user }); });
   app.post('/', function(req, res) { res.redirect(302, '/tribune/' + Tribune.createName(req.body.random ? null : req.body.name.toString())); });
 
   app.get('/tribune/:id', function(req, res) {

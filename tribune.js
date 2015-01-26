@@ -97,15 +97,19 @@ Tribune.loadTribune = function(id, callback) {
   (new Tribune(id)).load(callback);
 };
 
+Tribune.prototype.setProperties = function(properties) {
+  for (key in properties) {
+    if (properties.hasOwnProperty(key)) {
+      this[key] = properties[key];
+    }
+  }
+};
+
 Tribune.prototype.load = function(callback) {
   var tribune = this;
 
   global.db.loadTribune(this.id, function(err, data) {
-    for (key in data) {
-      if (data.hasOwnProperty(key)) {
-        tribune[key] = data[key];
-      }
-    }
+    tribune.setProperties(data);
 
     if (callback) {
       callback(err, tribune);
@@ -147,11 +151,7 @@ Tribune.prototype.render_post = function(post, callback) {
   var rendered_post = jade.renderFile(
     'views/post.jade',
     { tribune: this, post: post },
-    function(err, str) {
-      if (callback) {
-        callback(err, str);
-      }
-    }
+    callback
   );
 };
 
@@ -186,10 +186,11 @@ Tribune.prototype.sort_posts = function(a, b) {
 Tribune.prototype.post = function(data, callback) {
   var tribune = this;
 
-  var post = new Post(this, data);
-  post.save(function(err) {
-    tribune.posts.push(post);
-    callback(err, post);
+  var post = new Post(this, data, function(err, post) {
+    post.save(function(err) {
+      tribune.posts.push(post);
+      callback(err, post);
+    });
   });
 };
 

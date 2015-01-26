@@ -158,7 +158,6 @@ exports['test post'] = function(assert, done) {
       }, function(err) {
         assert.equal(err, null, "Post was correctly inserted");
         assert.equal(tribune.posts.length, 1, 'Post has been appended to tribune');
-        console.log(tribune.posts);
 
         Tribune.loadTribune(tribune.id, function(err, tribune) {
           assert.equal(tribune.posts.length, 1, 'Post has been saved and loaded');
