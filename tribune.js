@@ -162,7 +162,7 @@ Tribune.prototype.xml = function() {
 
   this.latest_posts().reverse().forEach(function(post) {
     xml += ' <post id="' + post.id + '" time="' + post.tribune_timestamp() + '">\n';
-    xml += '  <info>' + post.info + '</info>\n';
+    xml += '  <info>' + (post.info != undefined && post.info != "" ? post.info : post.nick) + '</info>\n';
     xml += '  <login>' + (post.user != undefined && post.user.name != undefined ? post.user.name : '') + '</login>\n';
     xml += '  <message>' + post.message_xml() + '</message>\n';
     xml += ' </post>\n';
