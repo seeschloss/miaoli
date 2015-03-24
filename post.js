@@ -154,6 +154,9 @@ Post.prototype.message_xml = function() {
     return '';
   }
 };
+Post.prototype.message_tsv = function() {
+  return this.message.replace(/\s/, " ");
+};
 Post.prototype.message_plain = function() {
   return this.message;
 };

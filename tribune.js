@@ -173,6 +173,20 @@ Tribune.prototype.xml = function() {
   return xml;
 };
 
+Tribune.prototype.tsv = function() {
+  // No need to write an XML formatter for this
+  var tsv = "";
+
+  this.latest_posts().reverse().forEach(function(post) {
+    var info = (post.info != undefined && post.info != "" ? post.info : post.nick);
+    var login = (post.user != undefined && post.user.name != undefined ? post.user.name : '');
+    tsv += [post.id, post.tribune_timestamp(), info, login, post.message_tsv()]
+      .join("\t") + "\n";
+  });
+
+  return tsv;
+};
+
 Tribune.prototype.latest_posts = function() {
   this.posts.sort(this.sort_posts);
   this.posts = this.posts.slice(-20);

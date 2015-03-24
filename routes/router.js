@@ -58,6 +58,7 @@ exports.setup = function(app) {
   app.post('/tribune/:id/post', Tribune.form_post);
   app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml; charset=utf8'); res.status(201).send(req.tribune.xml()); });
   app.get('/tribune/:id/xml', function(req, res) { res.set('Content-Type', 'application/xml; charset=utf8'); res.status(200).send(req.tribune.xml()); });
+  app.get('/tribune/:id/tsv', function(req, res) { res.set('Content-Type', 'text/tab-separated-values; charset=utf8'); res.status(200).send(req.tribune.tsv()); });
 
   app.get('/user', function(req, res) { res.render('user-home', { user: req.user }); });
   app.post('/user/config', function(req, res, next) {
