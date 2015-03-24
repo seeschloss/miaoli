@@ -52,7 +52,7 @@ routes.setup(app);
 io = io.listen(server, { log: false });
 
 Tribune.onNewPost = function(tribune, post) {
-  io.sockets.in(post.tribune).emit('new-post', {tribune: tribune, post: post});
+  io.sockets.in(tribune).emit('new-post', {tribune: tribune, post: post});
 };
 
 io.sockets.on('connection', function(socket) {
