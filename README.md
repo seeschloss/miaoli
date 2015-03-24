@@ -12,7 +12,7 @@ Tribunes are accessible at this path: `/tribune/<id>`.
 
 API
 ------
-The 20 latest messages of any tribune are available in XML format at this path: `/tribune/<id>/xml` or in tab-separated values format at this path: `/tribune/<id>/tsv` in the formats described below.
+The 20 latest messages of any tribune are available in XML format at this path: `/tribune/<id>/xml` or in tab-separated values format at this path: `/tribune/<id>/tsv` in the formats described below. Messages are listed from newest on top to oldest at bottom.
 
 Messages can be POSTed over HTTP to any tribune at this path: `/tribune/<id>/post` using the `message` POST parameter, and if necessary specifying a cookie for authentication.
 
