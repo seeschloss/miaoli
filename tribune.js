@@ -174,7 +174,6 @@ Tribune.prototype.xml = function() {
 };
 
 Tribune.prototype.tsv = function() {
-  // No need to write an XML formatter for this
   var tsv = "";
 
   this.latest_posts().reverse().forEach(function(post) {
