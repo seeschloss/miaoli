@@ -12,7 +12,7 @@ Tribunes are accessible at this path: `/tribune/<id>`.
 
 API
 ------
-The 20 latest messages of any tribune are available in XML format at this path: `/tribune/<id>/xml` in the format described below.
+The 20 latest messages of any tribune are available in XML format at this path: `/tribune/<id>/xml` or in tab-separated values format at this path: `/tribune/<id>/tsv` in the formats described below.
 
 Messages can be POSTed over HTTP to any tribune at this path: `/tribune/<id>/post` using the `message` POST parameter, and if necessary specifying a cookie for authentication.
 
@@ -26,6 +26,10 @@ Messages can be POSTed over HTTP to any tribune at this path: `/tribune/<id>/pos
     <message>[message content]</message>
   </post>
 </board>
+```
+### TSV format
+```tsv
+[post id]\t[posting time]\t[user nickname]\t[authenticated user nickname]\t[message content]\n
 ```
 #### Fields
 <dl>
@@ -42,7 +46,7 @@ Messages can be POSTed over HTTP to any tribune at this path: `/tribune/<id>/pos
   <dd>This is the fixed login name of an authenticated user. Clients are free to choose whether to display the authenticated nickname, anonymous nickname, both, or none. This field is also escaped using HTML entities.</dd>
     
   <dt>message content</dt>
-  <dd>The content of the message. Messages can include a handful of HTML tags (described below) which are not escaped in this field. It is the duty of the tribune engine to make sure the XML stays valid, by stripping or entitising all other tags.</dd>
+  <dd>The content of the message. Messages can include a handful of HTML tags (described below) which are not escaped in this field. It is the duty of the tribune engine to make sure the XML stays valid, by stripping or entitising all other tags. The only whitespace character allowed in this field is plain ASCII space. Newlines and tabs are forbidden.</dd>
 </dl>
 
 #### Message content
