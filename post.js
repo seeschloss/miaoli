@@ -157,7 +157,26 @@ Post.prototype.message_xml = function() {
   }
 };
 Post.prototype.message_tsv = function() {
-  return this.message.replace(/\s/, " ");
+  if (this.message) {
+    var message = this.message;
+    message = message.replace(/((https?|ftp|gopher|file|mms|rtsp|rtmp):\/\/.*?)((,|\.|\)|\]|\})?(<| |"|\[:|$))/g,
+      function(match, url, protocol, cruft, punctuation, after) {
+        var string = '<a href="' + url + '">[url]</a>';
+        if (undefined != punctuation) {
+          string += punctuation;
+        }
+        if (undefined != after) {
+          string += after;
+        }
+        return string;
+      }
+    );
+    message = message.replace(/\s/, " ");
+
+    return message;
+  } else {
+    return '';
+  }
 };
 Post.prototype.message_plain = function() {
   return this.message;
