@@ -85,7 +85,8 @@ Post.prototype.message_html = function() {
       text = text.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
       return '\032' + tag + '\033' + text + '\032/' + tag + '\033';
     }
-    message = this.message.substr(0, 500);
+    var message = this.message;
+    message = message.substr(0, 500);
     message = message.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
 
     message = message.replace(/&/g, '&amp;');
@@ -126,7 +127,8 @@ Post.prototype.message_xml = function() {
       text = text.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
       return '\032' + tag + '\033' + text + '\032/' + tag + '\033';
     }
-    message = this.message.substr(0, 500);
+    var message = this.message;
+    message = message.substr(0, 500);
     message = message.replace(/<(m|s|u|b|i|tt|code)>(.*?)<\/\1>/g, callback);
 
     message = message.replace(/&/g, '&amp;');
