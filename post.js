@@ -96,7 +96,7 @@ Post.prototype.message_html = function() {
     message = message.replace(/\032/g, '<');
     message = message.replace(/\033/g, '>');
 
-    message = message.replace(/((https?|ftp|gopher|file|mms|rtsp|rtmp):\/\/.*?)((,|\.|\)|\]|\})?(<| |"|\[:|$))/,
+    message = message.replace(/((https?|ftp|gopher|file|mms|rtsp|rtmp):\/\/.*?)((,|\.|\)|\]|\})?(<| |"|\[:|$))/g,
       function(match, url, protocol, cruft, punctuation, after) {
         var string = '<a href="' + url + '">[url]</a>';
         if (undefined != punctuation) {
@@ -138,7 +138,7 @@ Post.prototype.message_xml = function() {
     message = message.replace(/\032/g, '<');
     message = message.replace(/\033/g, '>');
 
-    message = message.replace(/((https?|ftp|gopher|file|mms|rtsp|rtmp):\/\/.*?)((,|\.|\)|\]|\})?(<| |"|\[:|$))/,
+    message = message.replace(/((https?|ftp|gopher|file|mms|rtsp|rtmp):\/\/.*?)((,|\.|\)|\]|\})?(<| |"|\[:|$))/g,
       function(match, url, protocol, cruft, punctuation, after) {
         var string = '<a href="' + url + '">[url]</a>';
         if (undefined != punctuation) {
