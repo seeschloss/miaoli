@@ -176,7 +176,7 @@ Tribune.prototype.xml = function() {
 Tribune.prototype.tsv = function() {
   var tsv = "";
 
-  this.latest_posts().reverse().forEach(function(post) {
+  this.latest_posts().forEach(function(post) {
     var info = (post.info != undefined && post.info != "" ? post.info : post.nick);
     var login = (post.user != undefined && post.user.name != undefined ? post.user.name : '');
     tsv += [post.id, post.tribune_timestamp(), info, login, post.message_tsv()]
