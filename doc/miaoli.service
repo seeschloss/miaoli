@@ -1,5 +1,7 @@
 [Unit]
 Description=Miaoli tribune
+Requires=redis.service
+After=network.target
 
 [Service]
 ExecStart=/usr/bin/node /usr/local/src/miaoli/app.js
