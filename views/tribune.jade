@@ -15,7 +15,7 @@ block content
       each post in posts
         include post
 
-    form#tribune-post(action=tribune.post_url,method="post")
+    form#tribune-post(action=tribune.url,method="post")
       div.row.collapse
         div.large-11.column
           input(class="message-input",type="text",name="message",placeholder="Your message")
@@ -28,6 +28,7 @@ block content
           div.large-6.column
             div.row.prefix-radius.row.collapse
               div.large-3.column
+                input.email(name="email",value="dont@change.org",title="don't modify this field, this is a decoy for automated posters")
                 label.left.prefix(for='nickname') Nickname
               div.large-9.column
                 input.left-label(type="text",name="nickname",placeholder="Nickname",id="nickname")

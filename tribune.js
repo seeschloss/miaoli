@@ -28,6 +28,11 @@ Tribune.form_post = function(req, res, next) {
     return;
   }
 
+  if (req.body.email && req.body.email != "dont@change.org") {
+    res.send(200);
+    return;
+  }
+
   logger.info('New message for tribune ' + tribune.id + ":\n" + req.body.message);
 
   async.waterfall([

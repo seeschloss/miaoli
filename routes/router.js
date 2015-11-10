@@ -55,6 +55,12 @@ exports.setup = function(app) {
   app.post('/tribune/:id/config', function(req, res) { req.tribune.configFromPost(req.body, function(err) {res.redirect(302, '/tribune/' + req.tribune.id);}); });
   app.all('/tribune/:id/config', function(req, res) { res.render('tribune-config', { title: req.tribune.title, tribune: req.tribune, user: req.user, errors: req.formErrors }); });
 
+  app.post('/tribune/:id', Tribune.form_post);
+  app.post('/tribune/:id', function(req, res) {
+    res.set('Location', '/tribune/' + req.tribune.id);
+    res.send(302);
+  });
+
   app.post('/tribune/:id/post', Tribune.form_post);
   app.post('/tribune/:id/post', function(req, res) { res.set('Content-Type', 'application/xml; charset=utf8'); res.status(201).send(req.tribune.xml()); });
   app.get('/tribune/:id/xml', function(req, res) { res.set('Content-Type', 'application/xml; charset=utf8'); res.status(200).send(req.tribune.xml()); });
