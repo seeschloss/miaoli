@@ -1,0 +1,23 @@
+#topbar {
+	background: #EEEEEE;
+	color: #00B7FF;
+}
+
+#sidebar {
+	background: #EEE;
+	border-right: 2px solid black;
+}
+
+#content {
+	border-top: 2px solid black;
+}
+
+a {
+	color: #00B7FF;
+}
+
+a:hover {
+	transition: color 0.1s;
+	color: #0092CC;
+}
+

@@ -1,0 +1,25 @@
+div {
+	/* outline: 1px rgba(200, 50, 0, 0.1) dashed; */
+}
+
+.new {
+	font-style: italic;
+}
+
+a.configure {
+	font-size: small;
+	font-style: italic;
+}
+
+label {
+	vertical-align: top;
+}
+
+button.warning {
+	color: #CC2222;
+}
+
+.hidden {
+	display: none;
+}
+

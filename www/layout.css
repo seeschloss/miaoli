@@ -1,0 +1,57 @@
+#topbar {
+	position: fixed;
+	width: 100%;
+	height: 50px;
+	top: 0;
+	left: 0;
+	text-align: right;
+	line-height: 50px;
+	padding-left: 20px;
+	padding-right: 20px;
+	box-sizing: border-box;
+}
+
+#sidebar {
+	position: fixed;
+	width: 300px;
+	top: 50px;
+	bottom: 50px;
+	left: 0;
+}
+
+#content {
+	position: fixed;
+	top: 50px;
+	bottom: 50px;
+	left: 300px;
+	right: 0;
+
+	padding: 2ex;
+}
+
+#footer {
+	position: fixed;
+	height: 50px;
+	width: 100%;
+	bottom: 0;
+	left: 0;
+}
+
+#topbar h1 {
+	display: inline-block;
+	left: 20px;
+	margin: 0;
+	position: absolute;
+}
+
+#topbar #usermenu {
+	display: inline-block;
+	padding: 0 10px;
+}
+
+#topbar #search {
+	display: inline-block;
+	padding: 0 10px;
+}
+
+

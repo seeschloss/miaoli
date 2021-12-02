@@ -1,0 +1,7 @@
+app-logs/
+cert/
+cfg/*.php
+db/*
+letsencrypt.sh
+logs/*
+www/.well-known

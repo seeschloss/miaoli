@@ -1,0 +1,132 @@
+.tribune {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.tribune .pinnipede {
+	overflow-y: auto;
+	flex-basis: 100%;
+}
+
+.tribune ol {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+
+.tribune li {
+	line-height: 140%;
+	vertical-align: middle;
+}
+
+.tribune .time, .tribune .username {
+	margin-right: 0.5ex;
+	vertical-align: middle;
+}
+
+.tribune .time {
+	cursor: pointer;
+	color: #FFFFFF;
+	background: #BBBBBB;
+	border: 1px solid transparent;
+
+	padding-right: 3px;
+	border-radius: 6px;
+}
+
+.tribune .time:before {
+	color: black;
+	content: "⤹";
+}
+
+.tribune .highlighted .time, .tribune .time:hover {
+	background: #FFFFFF;
+	color: #BBBBBB;
+	border-color: #BBBBBB;
+}
+
+.tribune li.highlighted {
+	background-color: #FFFFFF !important;
+}
+
+.tribune .username {
+	cursor: default;
+	color: #7598C9;
+}
+
+.tribune .username:after {
+  content: ">";
+}
+
+.tribune .message {
+	color: #42474a;
+	word-break: break-all;
+	word-break: break-word;
+}
+
+[contenteditable].message {
+	flex-basis: 100%;
+	min-height: 1.5em;
+	max-height: 150px;
+	overflow-y: auto;
+	border: solid 1px #BBB;
+	border-radius: 5px;
+	padding-left: 3px;
+	padding-top: 4px;
+	line-height: 120%;
+	vertical-align: middle;
+}
+
+[contenteditable].message * {
+	vertical-align: middle;
+}
+
+[contenteditable].message .url {
+	color: #00B7FF;
+	text-decoration: underline;
+}
+
+[contenteditable].message .totoz {
+	color: #00B7FF;
+}
+
+.tribune .clock-reference {
+	background: #BBBBBB;
+	color: #FFFFFF;
+	border-radius: 10px 10px 10px 10px;
+	padding: 0 4px;
+	margin-right: 0;
+	margin-left: 1px;
+	cursor: default;
+}
+
+.tribune .message .clock-reference {
+	cursor: pointer;
+}
+
+.tribune .message .clock-reference:hover {
+	background: #FFFFFF;
+	color: #BBBBBB;
+	box-shadow: 0 0 0 1px #BBB;
+}
+
+[contenteditable].message .clock-reference:first-child {
+	border-radius: 0 10px 10px 0;
+	padding-left: 1px;
+}
+
+[contenteditable].message .tag {
+	color: #BBBBBB;
+}
+
+#tribune-post {
+	display: flex;
+	flex-direction: row;
+	min-height: 2ex;
+	margin-top: 1ex;
+}
+
+#tribune-post button {
+	margin-left: 1ex;
+}
