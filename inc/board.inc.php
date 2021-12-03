@@ -73,9 +73,9 @@ CSS;
 	}
 
 	function xml() {
-		$xml = "<board>\n";
+		$xml = "<board site=\"https://miaoli.im/{$this->url}\">\n";
 
-		foreach ($this->latest_posts() as $post) {
+		foreach (array_reverse($this->latest_posts()) as $post) {
 			$xml .= $post->xml()."\n";
 		}
 		
