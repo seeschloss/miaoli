@@ -23,6 +23,16 @@ class Router {
 			'/<user>/\+([^/]+)' => [$this, 'tribune_show'],
 
 			'/<user>' => [$this, 'user_show'],
+
+			'/tribune/([^/]+)/post' => [$this, 'legacy_tribune_show_anonymous_post'],
+			'/tribune/([^/]+)/tsv' => [$this, 'legacy_tribune_show_anonymous_tsv'],
+			'/tribune/([^/]+)/xml' => [$this, 'legacy_tribune_show_anonymous_xml'],
+			'/tribune/([^/]+)' => [$this, 'legacy_tribune_show_anonymous'],
+			
+			'/%2B([^/]+)/posts.tsv' => [$this, 'tribune_show_anonymous_tsv'],
+			'/%2B([^/]+)/posts.xml' => [$this, 'tribune_show_anonymous_xml'],
+			'/%2B([^/]+)/edit' => [$this, 'tribune_edit_anonymous'],
+			'/%2B([^/]+)' => [$this, 'tribune_show_anonymous'],
 			
 			'/\+([^/]+)/posts.tsv' => [$this, 'tribune_show_anonymous_tsv'],
 			'/\+([^/]+)/posts.xml' => [$this, 'tribune_show_anonymous_xml'],
@@ -39,8 +49,9 @@ class Router {
 			'/<user>/\+([^/]+)/edit' => [$this, 'tribune_edit'],
 		];
 
-		if ($_SERVER['HTTP_ACCEPT'] == 'application/json') {
+		if (isset($_SERVER['HTTP_ACCEPT']) and $_SERVER['HTTP_ACCEPT'] == 'application/json') {
 			$this->json = true;
+		} else if (isset($_SERVER['HTTP_ACCEPT']) and $_SERVER['HTTP_ACCEPT'] == 'application/json') {
 		}
 	}
 
@@ -51,8 +62,8 @@ class Router {
 			foreach ($this->private_routes as $pattern => $function) {
 				$pattern = str_replace('<user>', '@[^/]*', $pattern);
 
-				if (preg_match('/^' . str_replace('/', '\/', $pattern) . '$/', $uri)) {
-					return $function(explode('/', $uri), $get, $post);
+				if (preg_match('/^' . str_replace('/', '\/', $pattern) . '$/', $uri, $matches)) {
+					return $function(explode('/', $uri), $get, $post, $matches);
 				}
 			}
 		}
@@ -60,8 +71,8 @@ class Router {
 		foreach ($this->public_routes as $pattern => $function) {
 			$pattern = str_replace('<user>', '@[^/]*', $pattern);
 
-			if (preg_match('/^' . str_replace('/', '\/', $pattern) . '$/', $uri)) {
-				return $function(explode('/', $uri), $get, $post);
+			if (preg_match('/^' . str_replace('/', '\/', $pattern) . '$/', $uri, $matches)) {
+				return $function(explode('/', $uri), $get, $post, $matches);
 			}
 		}
 
@@ -230,8 +241,137 @@ class Router {
 		return true;
 	}
 
-	public function tribune_show_anonymous($parts, $get, $post) {
-		if (!$tribune = Tribune::load_from_url($parts[1]) or !$tribune->temporary or $tribune->deleted) {
+	public function legacy_tribune_show_anonymous_tsv($parts, $get, $post) {
+		$tribune = Tribune::load_from_title($parts[2]);
+		
+		if (!$tribune) {
+			$tribune = new Tribune();
+			if (!isset($_SESSION['anonymous_tribunes'])) {
+				$_SESSION['anonymous_tribunes'] = [];
+			}
+			$tribune->temporary = 1;
+			$tribune->created = time();
+			$tribune->title = $parts[2];
+			$tribune->generate_color();
+			$tribune->generate_id();
+			if ($tribune->insert()) {
+				$_SESSION['anonymous_tribunes'][] = $tribune;
+			}
+		}
+
+		if (!$tribune->temporary or $tribune->deleted) {
+			header('HTTP/1.0 404 Not Found');
+		} else {
+			$board = new Board([$tribune], $tribune->url());
+			$this->theme->content = $board->tsv();
+		}
+
+		header('Content-Type: text/tab-separated-values;charset=UTF-8');
+		print $this->theme->bare();
+
+		return true;
+	}
+
+	public function legacy_tribune_show_anonymous_xml($parts, $get, $post) {
+		$tribune = Tribune::load_from_title($parts[2]);
+
+		if (!$tribune) {
+			$tribune = new Tribune();
+			if (!isset($_SESSION['anonymous_tribunes'])) {
+				$_SESSION['anonymous_tribunes'] = [];
+			}
+			$tribune->temporary = 1;
+			$tribune->created = time();
+			$tribune->title = $parts[2];
+			$tribune->generate_color();
+			$tribune->generate_id();
+			if ($tribune->insert()) {
+				$_SESSION['anonymous_tribunes'][] = $tribune;
+			}
+		}
+		
+		if (!$tribune->temporary or $tribune->deleted) {
+			header('HTTP/1.0 404 Not Found');
+		} else {
+			$board = new Board([$tribune], $tribune->url());
+			$this->theme->content = $board->xml();
+		}
+
+		header('Content-Type: text/tab-separated-values;charset=UTF-8');
+		print $this->theme->bare();
+
+		return true;
+	}
+
+	public function legacy_tribune_show_anonymous_post($parts, $get, $post) {
+		if (!$tribune = Tribune::load_from_title($parts[2])) {
+			header('HTTP/1.0 404 Not Found');
+		}
+
+		$board = new Board([$tribune], $tribune->url());
+
+		if ($new_post = $tribune->post($post, $this->site) and $this->json) {
+			$this->theme->content = $board->json([$new_post]);
+		} else if ($this->json) {
+			$this->theme->content = $board->json();
+		} else {
+			$this->theme->title = $tribune->title;
+			$this->theme->content = $board->show();
+		}
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			$this->theme->sidebar = $this->site->sidebar();
+			$this->theme->topbar = $this->site->topbar();
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
+	public function legacy_tribune_show_anonymous($parts, $get, $post) {
+		if (!$tribune = Tribune::load_from_title($parts[2])) {
+			$tribune = new Tribune();
+			if (!isset($_SESSION['anonymous_tribunes'])) {
+				$_SESSION['anonymous_tribunes'] = [];
+			}
+			$tribune->temporary = 1;
+			$tribune->created = time();
+			$tribune->title = $parts[2];
+			$tribune->generate_color();
+			$tribune->generate_id();
+			if ($tribune->insert()) {
+				$_SESSION['anonymous_tribunes'][] = $tribune;
+			}
+		}
+
+		$board = new Board([$tribune], $tribune->url());
+
+		if ($new_post = $tribune->post($post, $this->site) and $this->json) {
+			$this->theme->content = $board->json([$new_post]);
+		} else if ($this->json) {
+			$this->theme->content = $board->json();
+		} else {
+			$this->theme->title = $tribune->title;
+			$this->theme->content = $board->show();
+		}
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			$this->theme->sidebar = $this->site->sidebar();
+			$this->theme->topbar = $this->site->topbar();
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
+	public function tribune_show_anonymous($parts, $get, $post, $matches) {
+		if (!$tribune = Tribune::load_from_url($matches[1]) or !$tribune->temporary or $tribune->deleted) {
 			header('HTTP/1.0 404 Not Found');
 		} else {
 			$board = new Board([$tribune], $tribune->url());
@@ -258,10 +398,10 @@ class Router {
 		return true;
 	}
 
-	public function tribune_show_anonymous_tsv($parts, $get, $post) {
-		$tribune = Tribune::load_from_url($parts[1]);
+	public function tribune_show_anonymous_tsv($parts, $get, $post, $matches) {
+		$tribune = Tribune::load_from_url($matches[1]);
 		
-		if (!$tribune->temporary or $tribune->deleted) {
+		if (!$tribune or !$tribune->temporary or $tribune->deleted) {
 			header('HTTP/1.0 404 Not Found');
 		} else {
 			$board = new Board([$tribune], $tribune->url());
@@ -274,10 +414,10 @@ class Router {
 		return true;
 	}
 
-	public function tribune_show_anonymous_xml($parts, $get, $post) {
-		$tribune = Tribune::load_from_url($parts[1]);
+	public function tribune_show_anonymous_xml($parts, $get, $post, $matches) {
+		$tribune = Tribune::load_from_url($matches[1]);
 		
-		if (!$tribune->temporary or $tribune->deleted) {
+		if (!$tribune or !$tribune->temporary or $tribune->deleted) {
 			header('HTTP/1.0 404 Not Found');
 		} else {
 			$board = new Board([$tribune], $tribune->url());

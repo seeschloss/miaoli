@@ -225,14 +225,24 @@ HTML;
 		return $this->id;
 	}
 
-	public static function load_from_url($url) {
-		$tribunes = self::select(['id_base60' => mb_substr($url, 1),]);
+	public static function load_from_title($title) {
+		$tribunes = self::select(['title' => $title]);
 
 		if (count($tribunes) === 1) {
 			return array_pop($tribunes);
 		}
 
-		$tribunes = self::select(['machine_name' => mb_substr($url, 1),]);
+		return false;
+	}
+
+	public static function load_from_url($url) {
+		$tribunes = self::select(['id_base60' => $url]);
+
+		if (count($tribunes) === 1) {
+			return array_pop($tribunes);
+		}
+
+		$tribunes = self::select(['machine_name' => $url]);
 		if (count($tribunes) === 1) {
 			return array_pop($tribunes);
 		}

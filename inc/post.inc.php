@@ -85,7 +85,6 @@ HTML;
 		<login>{$username_formatted}</login>
 		<message>{$message_formatted}</message>
 	</post>
-
 XML;
 	}
 
