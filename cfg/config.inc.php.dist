@@ -1,0 +1,13 @@
+<?php
+
+$config = [
+	'salt' => RANDOM SALT GOES HERE,
+	'logging' => [
+		'directory' => __DIR__.'/../app-logs/',
+	],
+	'database' => [
+		'dsn' => 'sqlite:'.__DIR__.'/../db/miaoli.db',
+	],
+	'contact' => 'admin@',
+];
+
