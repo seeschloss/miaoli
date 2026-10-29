@@ -22,6 +22,12 @@ class Board {
 	}
 
 	function latest_posts() {
+		foreach ($this->tribunes as $tribune) {
+			if ($tribune->remote_backend_url) {
+				$tribune->synchronize_from_backend();
+			}
+		}
+
 		$posts = Post::select(['tribune_id IN ('.implode(',', $this->tribune_ids()).')'], 'timestamp DESC, post_id DESC', $this->max_posts);
 		$posts = array_reverse($posts);
 
@@ -47,7 +53,8 @@ CSS;
 		$html .= "<div class='feed tribune' data-max-posts='{$this->max_posts}' data-reload-url='/{$this->url}'>";
 
 		if (count($this->tribunes) == 1) {
-			$html .= "<h1>{$this->tribunes[0]->link_with_configure()}</h1>";
+			$tribune = current($this->tribunes);
+			$html .= "<h1>{$tribune->link_with_configure()}</h1>";
 		}
 
 		$html .= "<div class='pinnipede'><ol>";
@@ -110,7 +117,7 @@ CSS;
 
 		$post_url = $this->url;
 		if (count($this->tribunes) == 1) {
-			$post_url = $this->tribunes[0]->url();
+			$post_url = current($this->tribunes)->url();
 			$input_tribune->attributes['class'] = "hidden";
 		}
 

@@ -19,7 +19,7 @@ class Tribune extends Record {
 	function __construct() {
 	}
 
-	function get_post_id() {
+	function get_next_post_id() {
 		$posts = Post::select(['tribune_id' => $this->id], 'post_id DESC', 1);
 
 		if (count($posts)) {
@@ -29,14 +29,14 @@ class Tribune extends Record {
 		}
 	}
 
-	function post($data, $site) {
+	function post_locally($data, $site) {
 		if (!empty($data['message'])) {
 			$post = new Post();
 			$post->tribune_id = $this->id;
 			$post->message = trim(str_replace(" ", " ", $data['message']));
 			$post->useragent = $_SERVER['HTTP_USER_AGENT'];
 			$post->timestamp = time();
-			$post->post_id = $this->get_post_id();
+			$post->post_id = $this->get_next_post_id();
 
 			if ($site->user) {
 				$post->username = $site->user->username;
@@ -49,6 +49,39 @@ class Tribune extends Record {
 		}
 
 		return false;
+	}
+
+	function post_remotely($data, $site) {
+		$http = new HTTP($this->remote_post_url);
+		$data = str_replace("%s", urlencode($data['message']), $this->remote_post_format);
+
+		$options = [
+			CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'],
+		];
+
+		if ($site->user) {
+			$options[CURLOPT_USERAGENT] = $site->user->username;
+		}
+
+		return $http->post($data, $options) !== false;
+	}
+
+	function post($data, $site) {
+		if (!empty($this->remote_post_url)) {
+			$result = $this->post_remotely($data, $site);
+			if ($result) {
+				$this->synchronize_from_backend();
+				$posts = Post::select(['tribune_id' => $this->id], 'post_id DESC', 1);
+
+				if (count($posts)) {
+					return array_pop($posts);
+				}
+			}
+
+			return false;
+		} else {
+			return $this->post_locally($data, $site);
+		}
 	}
 
 	function fill($data) {
@@ -73,6 +106,22 @@ class Tribune extends Record {
 				$GLOBALS['form_errors']['color'] = 'Colors should be an hexadecimal RGB value in the form #42BF5E';
 				return false;
 			}
+		}
+
+		if (isset($data['remote-backend-url'])) {
+			$this->remote_backend_url = trim($data['remote-backend-url']);
+		}
+
+		if (isset($data['remote-backend-type'])) {
+			$this->remote_backend_type = trim($data['remote-backend-type']);
+		}
+
+		if (isset($data['remote-post-url'])) {
+			$this->remote_post_url = trim($data['remote-post-url']);
+		}
+
+		if (isset($data['remote-post-format'])) {
+			$this->remote_post_format = trim($data['remote-post-format']);
 		}
 
 		if (isset($data['machine_name'])) {
@@ -107,6 +156,37 @@ class Tribune extends Record {
 				<p>{$input_title->html("Title")}</p>
 				<p>{$input_description->html("Short description")}</p>
 				<p>{$input_color->html("Characteristic color")}</p>
+HTML;
+
+		if (!$this->temporary) {
+			$input_remote_backend_url = new HTML_Input("tribune-remote-backend-url");
+			$input_remote_backend_url->name = "remote-backend-url";
+			$input_remote_backend_url->value = $this->remote_backend_url;
+
+			$input_remote_backend_type = new HTML_Input("tribune-remote-backend-type");
+			$input_remote_backend_type->name = "remote-backend-type";
+			$input_remote_backend_type->value = $this->remote_backend_type;
+
+			$input_remote_post_url = new HTML_Input("tribune-remote-post-url");
+			$input_remote_post_url->name = "remote-post-url";
+			$input_remote_post_url->value = $this->remote_post_url;
+
+			$input_remote_post_format = new HTML_Input("tribune-remote-post-format");
+			$input_remote_post_format->name = "remote-post-format";
+			$input_remote_post_format->value = $this->remote_post_format;
+
+			$html .= <<<HTML
+					<input type="hidden" name="tribune_id" value="{$this->id_base60()}" />
+					<input type="hidden" name="action" value="tribune-remote" />
+					<p>{$input_remote_backend_url->html("Remote backend URL")}</p>
+					<p>{$input_remote_backend_type->html("Remote backend type")}</p>
+					<p>{$input_remote_post_url->html("Remote post URL")}</p>
+					<p>{$input_remote_post_format->html("Remote post format")}</p>
+
+HTML;
+		}
+
+		$html .= <<<HTML
 				<p><button type="submit">Save</button></p>
 			</form>
 HTML;
@@ -143,20 +223,25 @@ HTML;
 	function insert() {
 		$db = new DB();
 
-		$query = 'INSERT INTO tribunes
-				(id, id_base60, machine_name, user_id, title, description, color, deleted, temporary, created)
-			VALUES (
-				'.(int)$this->id.',
-				'.$db->escape($this->id_base60()).',
-				'.$db->escape($this->machine_name).',
-				'.(int)$this->user_id.',
-				'.$db->escape($this->title).',
-				'.$db->escape($this->description).',
-				'.$db->escape($this->color).',
-				'.(int)$this->deleted.',
-				'.(int)$this->temporary.',
-				'.(int)$this->created.'
-		);';
+		$fields = [
+			'id' => (int)$this->id,
+			'id_base60' => $db->escape($this->id_base60()),
+			'machine_name' => $db->escape($this->machine_name),
+			'user_id' => (int)$this->user_id,
+			'title' => $db->escape($this->title),
+			'description' => $db->escape($this->description),
+			'color' => $db->escape($this->color),
+			'remote_backend_url' => $db->escape($this->remote_backend_url),
+			'remote_backend_type' => $db->escape($this->remote_backend_type),
+			'remote_post_url' => $db->escape($this->remote_post_url),
+			'remote_post_format' => $db->escape($this->remote_post_format),
+			'deleted' => (int)$this->deleted,
+			'temporary' => (int)$this->temporary,
+			'created' => (int)$this->created,
+		];
+
+		$query = 'INSERT INTO tribunes ('.implode(',', array_keys($fields)).') '.
+		                       'VALUES ('.implode(',', array_values($fields)).')';
 
 		$db->query($query);
 
@@ -166,18 +251,23 @@ HTML;
 	function update() {
 		$db = new DB();
 
-		$query = 'UPDATE tribunes SET
-					id_base60='.$db->escape($this->id_base60()).',
-					machine_name='.$db->escape($this->machine_name).',
-					user_id='.(int)$this->user_id.',
-					title='.$db->escape($this->title).',
-					description='.$db->escape($this->description).',
-					color='.$db->escape($this->color).',
-					temporary='.(int)$this->temporary.',
-					deleted='.(int)$this->deleted.'
-				WHERE
-					id='.(int)$this->id.';
-		';
+		$fields = [
+			'id_base60' => $db->escape($this->id_base60()),
+			'machine_name' => $db->escape($this->machine_name),
+			'user_id' => (int)$this->user_id,
+			'title' => $db->escape($this->title),
+			'description' => $db->escape($this->description),
+			'color' => $db->escape($this->color),
+			'remote_backend_url' => $db->escape($this->remote_backend_url),
+			'remote_backend_type' => $db->escape($this->remote_backend_type),
+			'remote_post_url' => $db->escape($this->remote_post_url),
+			'remote_post_format' => $db->escape($this->remote_post_format),
+			'deleted' => (int)$this->deleted,
+			'temporary' => (int)$this->temporary,
+		];
+
+		$query = 'UPDATE tribunes SET ' . implode(', ', array_map(function($k, $v) { return $k . '=' . $v; }, array_keys($fields), $fields)) .
+		         ' WHERE id = '.(int)$this->id;
 
 		$db->query($query);
 
@@ -236,6 +326,10 @@ HTML;
 	}
 
 	public static function load_from_url($url) {
+		if (strlen($url) > 1 and $url[0] === '+') {
+			$url = substr($url, 1);
+		}
+
 		$tribunes = self::select(['id_base60' => $url]);
 
 		if (count($tribunes) === 1) {
@@ -340,5 +434,47 @@ HTML;
 		}
 
 		return $html;
+	}
+
+	function synchronize_from_backend() {
+		$http = new HTTP($this->remote_backend_url);
+		$data = $http->get();
+
+		$next_post_id = $this->get_next_post_id();
+
+		switch ($this->remote_backend_type) {
+			case 'tsv':
+				$lines = explode("\n", $data);
+				foreach ($lines as $line) {
+					$parts = explode("\t", trim($line));
+
+					if (count($parts) == 5) {
+						$post_id = $parts[0];
+						$post_time = $parts[1];
+						$post_user = $parts[2];
+						$post_info = $parts[3];
+						$post_message = $parts[4];
+
+						$post_datetime = DateTimeImmutable::createFromFormat('YmdHis', $post_time);
+						if ($post_datetime and $post_id and $post_id >= $next_post_id) {
+							$post_timestamp = $post_datetime->getTimestamp();
+
+							$post_message = preg_replace('@<a href="([^"]*)">([^<]*)</a>@', '$1', $post_message);
+
+							$post = new Post();
+							$post->tribune_id = $this->id;
+							$post->message = trim($post_message);
+							$post->useragent = $post_info;
+							$post->timestamp = $post_timestamp;
+							$post->post_id = $post_id;
+							$post->username = $post_user;
+
+							$post->insert();
+						}
+					}
+				}
+
+				break;
+		}
 	}
 }

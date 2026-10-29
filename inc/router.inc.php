@@ -376,8 +376,12 @@ class Router {
 		} else {
 			$board = new Board([$tribune], $tribune->url());
 
-			if ($new_post = $tribune->post($post, $this->site) and $this->json) {
-				$this->theme->content = $board->json([$new_post]);
+			if (!empty($post['message']) and $new_post = $tribune->post($post, $this->site)) {
+				header("X-Post-Id: {$new_post->post_id}");
+
+				if ($this->json) {
+					$this->theme->content = $board->json([$new_post]);
+				}
 			} else if ($this->json) {
 				$this->theme->content = $board->json();
 			} else {
@@ -461,8 +465,12 @@ class Router {
 		if ($user && $tribune && $user->id === $tribune->user_id) {
 			$board = new Board([$tribune], $tribune->url());
 
-			if ($new_post = $tribune->post($post, $this->site) and $this->json) {
-				$this->theme->content = $board->json([$new_post]);
+			if (!empty($post['message']) and $new_post = $tribune->post($post, $this->site)) {
+				header("X-Post-Id: {$new_post->post_id}");
+
+				if ($this->json) {
+					$this->theme->content = $board->json([$new_post]);
+				}
 			} else if ($this->json) {
 				$this->theme->content = $board->json();
 			} else {

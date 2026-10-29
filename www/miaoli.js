@@ -44,6 +44,8 @@ Tribune.prototype.insert_post = function(post_html) {
 			var a = this.postsList.removeChild(this.postsList.children[0]);
 		}
 	}
+
+	this.scroll_if_necessary();
 };
 
 Tribune.prototype.setup_timers = function() {

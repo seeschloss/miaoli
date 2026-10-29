@@ -44,7 +44,29 @@ class Update {
 			self::to_10();
 		}
 
+		if (!$db->query('SELECT remote_backend_url FROM tribunes LIMIT 1')) {
+			self::to_11();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_11() {
+		echo "11. Add remote_backend_url, remote_post_url, remote_post_format and remote_backend_type to table `tribune`\n";
+
+		$db = new DB();
+		$db->query(
+			'ALTER TABLE tribunes ADD remote_backend_url TEXT'
+		);
+		$db->query(
+			'ALTER TABLE tribunes ADD remote_backend_type TEXT'
+		);
+		$db->query(
+			'ALTER TABLE tribunes ADD remote_post_url TEXT'
+		);
+		$db->query(
+			'ALTER TABLE tribunes ADD remote_post_format TEXT'
+		);
 	}
 
 	static function to_10() {

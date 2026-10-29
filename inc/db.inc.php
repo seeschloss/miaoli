@@ -12,6 +12,10 @@ class DB {
 				title TEXT,
 				description TEXT,
 				color TEXT,
+				remote_backend_url TEXT,
+				remote_backend_type TEXT,
+				remote_post_url TEXT,
+				remote_post_format TEXT,
 				temporary INTEGER,
 				deleted INTEGER,
 				created INTEGER
@@ -78,7 +82,23 @@ class DB {
 	}
 
 	function query($query) {
-		$result = self::$resource->query($query);
+		$result = false;
+		try {
+			$result = self::$resource->query($query);
+		} catch (Exception $e) {
+			$error = $e->getMessage();
+
+			if (class_exists('Logger')) {
+				Logger::error($error);
+				Logger::error("Query was: ".$query);
+			}
+			else {
+				trigger_error($error);
+				trigger_error("Query was: ".$query);
+			}
+			return false;
+		}
+
 		if (!$result) {
 			$error = $this->error();
 			if (class_exists('Logger')) {

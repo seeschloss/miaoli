@@ -8,6 +8,7 @@ require_once dirname(__FILE__).'/record.inc.php';
 require_once dirname(__FILE__).'/base60.inc.php';
 require_once dirname(__FILE__).'/html.inc.php';
 require_once dirname(__FILE__).'/rgb.inc.php';
+require_once dirname(__FILE__).'/http.inc.php';
 
 require_once dirname(__FILE__).'/theme.inc.php';
 require_once dirname(__FILE__).'/site.inc.php';
