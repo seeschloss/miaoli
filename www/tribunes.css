@@ -2,79 +2,90 @@
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+	gap: 0.5rem;
 }
 
 .tribune .pinnipede {
 	overflow-y: auto;
-	flex-basis: 100%;
+	flex: 1 1 auto;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	padding: 0.75rem;
 }
 
 .tribune ol {
-	list-style-type: none;
+	list-style: none;
 	padding: 0;
 	margin: 0;
 }
 
 .tribune li {
-	line-height: 140%;
-	vertical-align: middle;
+	line-height: 1.5;
+	padding: 0.35rem 0;
+	border-bottom: 1px solid var(--border);
 }
 
-.tribune .time, .tribune .username {
-	margin-right: 0.5ex;
-	vertical-align: middle;
-}
+.tribune li:last-child { border-bottom: none; }
 
 .tribune .time {
+	display: inline-block;
+	margin-right: 0.5rem;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	background: var(--border);
+	color: var(--muted);
+	font-size: 0.75rem;
 	cursor: pointer;
-	color: #FFFFFF;
-	background: #BBBBBB;
 	border: 1px solid transparent;
-
-	padding-right: 3px;
-	border-radius: 6px;
+	vertical-align: middle;
 }
 
 .tribune .time:before {
-	color: black;
-	content: "⤹";
+	color: var(--muted);
+	content: "⤹ ";
 }
 
-.tribune .highlighted .time, .tribune .time:hover {
-	background: #FFFFFF;
-	color: #BBBBBB;
-	border-color: #BBBBBB;
+.tribune .highlighted .time,
+.tribune .time:hover {
+	background: var(--accent);
+	color: #fff;
 }
 
 .tribune li.highlighted {
-	background-color: #FFFFFF !important;
+	background: color-mix(in srgb, var(--accent) 10%, transparent);
+	border-radius: 8px;
 }
 
 .tribune .username {
 	cursor: default;
-	color: #7598C9;
+	color: var(--accent);
+	font-weight: 500;
+	vertical-align: middle;
 }
 
 .tribune .username:after {
-  content: ">";
+	content: "›";
+	margin-left: 0.25rem;
+	color: var(--muted);
 }
 
 .tribune .message {
-	color: #42474a;
-	word-break: break-all;
+	color: var(--text);
 	word-break: break-word;
+	vertical-align: middle;
 }
 
 [contenteditable].message {
-	flex-basis: 100%;
-	min-height: 1.5em;
-	max-height: 150px;
+	flex: 1;
+	min-height: 2.2rem;
+	max-height: 12rem;
 	overflow-y: auto;
-	border: solid 1px #BBB;
-	border-radius: 5px;
-	padding-left: 3px;
-	padding-top: 4px;
-	line-height: 120%;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	padding: 0.5rem 0.65rem;
+	background: var(--surface);
+	line-height: 1.4;
 	vertical-align: middle;
 }
 
@@ -83,22 +94,22 @@
 }
 
 [contenteditable].message .url {
-	color: #00B7FF;
+	color: var(--accent);
 	text-decoration: underline;
 }
 
 [contenteditable].message .totoz {
-	color: #00B7FF;
+	color: var(--accent);
 }
 
 .tribune .clock-reference {
-	background: #BBBBBB;
-	color: #FFFFFF;
-	border-radius: 10px 10px 10px 10px;
-	padding: 0 4px;
-	margin-right: 0;
-	margin-left: 1px;
+	background: var(--border);
+	color: var(--muted);
+	border-radius: 999px;
+	padding: 0 0.4rem;
+	margin: 0 0.1rem;
 	cursor: default;
+	font-size: 0.85em;
 }
 
 .tribune .message .clock-reference {
@@ -106,27 +117,33 @@
 }
 
 .tribune .message .clock-reference:hover {
-	background: #FFFFFF;
-	color: #BBBBBB;
-	box-shadow: 0 0 0 1px #BBB;
+	background: var(--accent);
+	color: #fff;
 }
 
 [contenteditable].message .clock-reference:first-child {
-	border-radius: 0 10px 10px 0;
-	padding-left: 1px;
+	border-radius: 0 999px 999px 0;
+	padding-left: 0.1rem;
 }
 
 [contenteditable].message .tag {
-	color: #BBBBBB;
+	color: var(--muted);
 }
 
 #tribune-post {
 	display: flex;
 	flex-direction: row;
+	gap: 0.5rem;
+	align-items: center;
 	min-height: 2ex;
-	margin-top: 1ex;
+	margin-top: 0.5rem;
+}
+
+#tribune-post select {
+	width: auto;
+	min-width: 120px;
 }
 
 #tribune-post button {
-	margin-left: 1ex;
+	margin-left: 0;
 }

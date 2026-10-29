@@ -24,8 +24,10 @@ class Theme {
 	function html() {
 		$html = <<<HTML
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>{$this->title()}</title>
 		<link rel="stylesheet" href="/layout.css" />
 		<link rel="stylesheet" href="/colors.css" />
@@ -80,4 +82,3 @@ HTML;
 		return $html;
 	}
 }
-
