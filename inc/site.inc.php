@@ -60,6 +60,8 @@ HTML;
 	public function sidebar() {
 		$html = "";
 
+		$html .= '<input id="sidebar-filter" type="search" placeholder="Filter…" />';
+
 		if ($this->user) {
 			$tribunes = Tribune::select(['user_id' => $this->user->id, 'deleted' => '0']);
 			$tribunes_list = [];

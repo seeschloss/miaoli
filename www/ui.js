@@ -38,4 +38,29 @@
 			localStorage.setItem('theme', next);
 		});
 	}
+
+	// Sidebar filter
+	var filter = document.getElementById('sidebar-filter');
+	if (filter) {
+		filter.addEventListener('input', function () {
+			var q = filter.value.toLowerCase();
+			var items = document.querySelectorAll('#sidebar li');
+			items.forEach(function (li) {
+				var text = li.textContent.toLowerCase();
+				li.style.display = text.indexOf(q) === -1 ? 'none' : '';
+			});
+		});
+	}
+
+	// Track recent tribunes
+	try {
+		var path = location.pathname;
+		if (path && path !== '/' && path.indexOf('+') !== -1) {
+			var recents = JSON.parse(localStorage.getItem('recent-tribunes') || '[]');
+			recents = recents.filter(function (p) { return p !== path; });
+			recents.unshift(path);
+			recents = recents.slice(0, 5);
+			localStorage.setItem('recent-tribunes', JSON.stringify(recents));
+		}
+	} catch (e) {}
 })();
