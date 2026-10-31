@@ -39,6 +39,7 @@ class Theme {
 		<div id="topbar">{$this->topbar}</div>
 		<div id="sidebar">{$this->sidebar}</div>
 		<div id="content">{$this->content}</div>
+		<script src="/ui.js"></script>
 	</body>
 </html>
 HTML;

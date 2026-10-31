@@ -125,9 +125,11 @@ HTML;
 
 	public function topbar() {
 		$html = <<<HTML
+			<button id="sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">☰</button>
 			<h1 id="title"><a href="/">Miaoli<small>.im</small></a></h1>
 			{$this->form_search()}
 			{$this->usermenu()}
+			<button id="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
 HTML;
 
 		return $html;
