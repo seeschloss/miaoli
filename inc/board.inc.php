@@ -40,7 +40,8 @@ class Board {
 			$color = new RGB($tribune->color);
 			$css .= <<<CSS
 				.feed li.tribune-{$tribune->id} {
-					background-color: {$color->to_css(0.2)};
+					border-left: 4px solid {$tribune->color};
+					padding-left: 0.5rem;
 				}
 CSS;
 		}
@@ -57,9 +58,25 @@ CSS;
 			$html .= "<h1>{$tribune->link_with_configure()}</h1>";
 		}
 
+		$multi = count($this->tribunes) > 1;
+
 		$html .= "<div class='pinnipede'><ol>";
 		foreach ($this->latest_posts() as $post) {
-			$html .= $post->html();
+			$post_html = $post->html();
+			if ($multi) {
+				$source_title = '';
+				foreach ($this->tribunes as $tribune) {
+					if ($tribune->id == $post->tribune_id) {
+						$source_title = htmlentities($tribune->title);
+					}
+				}
+				$post_html = str_replace(
+					'<span class="username">',
+					'<span class="tribune-source">'.$source_title.'</span> <span class="username">',
+					$post_html
+				);
+			}
+			$html .= $post_html;
 		}
 		$html .= "</ol></div>";
 
