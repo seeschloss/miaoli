@@ -188,8 +188,20 @@ Tribune.prototype.setup_events = function(elements) {
 			timeEl.title = 'Click to quote this post';
 		}
 
+		var threadBtn = document.createElement('button');
+		threadBtn.type = 'button';
+		threadBtn.className = 'thread-toggle';
+		threadBtn.textContent = 'thread';
+		threadBtn.title = 'Focus this thread';
+		var self = this;
+		threadBtn.addEventListener('click', function (e) {
+			e.preventDefault();
+			self.toggleThread(post, threadBtn);
+		});
+		post.querySelector('.post').insertBefore(threadBtn, post.querySelector('.message'));
+
 		var totozes = post.querySelectorAll('.totoz');
-		for (var j = 0, totoz; j < references.length, totoz = totozes[j]; j++) {
+		for (var j = 0, totoz; j < totozes.length, totoz = totozes[j]; j++) {
 			var img = document.createElement('img');
 			var totoz_name = totoz.innerHTML.substr(2, totoz.innerHTML.length - 3);
 			img.src = 'https://totoz.eu/img/' + totoz_name;
@@ -268,6 +280,65 @@ Tribune.prototype.reset_highlight = function() {
 	for (var i = 0, element; i < highlighted.length, element = highlighted[i]; i++) {
 		element.classList.remove('highlighted');
 	}
+};
+
+Tribune.prototype.refMatches = function (postTs, refTs) {
+	if (!refTs) { return false; }
+	if (refTs.length === 14) { return postTs === refTs; }
+	if (refTs.length === 6) { return postTs.slice(-6) === refTs; }
+	if (refTs.length === 4) { return postTs.indexOf(refTs) !== -1; }
+	return false;
+};
+
+Tribune.prototype.toggleThread = function (post, btn) {
+	var self = this;
+	var allPosts = Array.prototype.slice.call(this.postsList.querySelectorAll('li'));
+	var postTs = function (li) { return li.querySelector('span.post').dataset.timestamp; };
+	var refsOf = function (li) {
+		var out = [];
+		var refs = li.querySelectorAll('.clock-reference');
+		for (var i = 0; i < refs.length; i++) { out.push(refs[i].dataset.timestamp); }
+		return out;
+	};
+
+	if (this._threadFocused === post) {
+		// restore
+		allPosts.forEach(function (li) { li.style.display = ''; });
+		this._threadFocused = null;
+		btn.textContent = 'thread';
+		return;
+	}
+
+	var inThread = new Set();
+	var queue = [post];
+	inThread.add(post);
+	while (queue.length) {
+		var cur = queue.pop();
+		var curTs = postTs(cur);
+		// posts referenced by cur
+		refsOf(cur).forEach(function (ref) {
+			allPosts.forEach(function (p) {
+				if (!inThread.has(p) && self.refMatches(postTs(p), ref)) {
+					inThread.add(p);
+					queue.push(p);
+				}
+			});
+		});
+		// posts referencing cur
+		allPosts.forEach(function (p) {
+			if (inThread.has(p)) { return; }
+			if (refsOf(p).some(function (r) { return self.refMatches(curTs, r); })) {
+				inThread.add(p);
+				queue.push(p);
+			}
+		});
+	}
+
+	allPosts.forEach(function (li) {
+		li.style.display = inThread.has(li) ? '' : 'none';
+	});
+	this._threadFocused = post;
+	btn.textContent = 'all';
 };
 
 Tribune.prototype.insert_element_in_message = function(element) {

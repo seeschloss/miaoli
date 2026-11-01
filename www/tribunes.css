@@ -28,6 +28,22 @@
 
 .tribune li:last-child { border-bottom: none; }
 
+.thread-toggle {
+	margin-left: 0.4rem;
+	padding: 0.05rem 0.45rem;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--muted);
+	font-size: 0.7rem;
+	cursor: pointer;
+	vertical-align: middle;
+}
+.thread-toggle:hover {
+	color: var(--accent);
+	border-color: var(--accent);
+}
+
 .tribune .time {
 	display: inline-block;
 	margin-right: 0.5rem;
