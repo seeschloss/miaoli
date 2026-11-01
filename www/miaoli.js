@@ -25,7 +25,14 @@ function Tribune(dom) {
 }
 
 Tribune.prototype.scroll_if_necessary = function() {
-	this.postsList.querySelector("li:last-child").scrollIntoView();
+	var container = this.dom.querySelector('.pinnipede');
+	var last = this.postsList.querySelector("li:last-child");
+	if (!last) { return; }
+	if (container) {
+		var nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+		if (!nearBottom) { return; }
+	}
+	last.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
 // This isn't perfect.
@@ -164,6 +171,21 @@ Tribune.prototype.setup_events = function(elements) {
 			reference.onmouseout = function() {
 				self.reset_highlight();
 			};
+			reference.addEventListener('click', function(e) {
+				e.preventDefault();
+				self.mouse_over(this);
+				var highlighted = self.dom.querySelectorAll('li.highlighted');
+				if (highlighted.length) {
+					highlighted[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+				}
+				setTimeout(function() { self.reset_highlight(); }, 1500);
+			});
+			reference.style.cursor = 'pointer';
+		}
+
+		var timeEl = post.querySelector('.time');
+		if (timeEl) {
+			timeEl.title = 'Click to quote this post';
 		}
 
 		var totozes = post.querySelectorAll('.totoz');
