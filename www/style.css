@@ -31,7 +31,25 @@ a.configure {
 	margin-left: 0.5rem;
 }
 
-.new { font-style: italic; color: var(--muted); }
+.new {
+	display: inline-block;
+	padding: 0.25rem 0.7rem;
+	border: 1px dashed var(--border);
+	border-radius: 999px;
+	color: var(--accent);
+	font-style: normal;
+	font-size: 0.9rem;
+	text-decoration: none;
+}
+.new:hover {
+	border-style: solid;
+	background: var(--surface);
+	text-decoration: none;
+}
+.new::before {
+	content: "+ ";
+	font-weight: 600;
+}
 
 input, textarea, select, button { font: inherit; }
 
