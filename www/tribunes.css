@@ -24,6 +24,20 @@
 	line-height: 1.5;
 	padding: 0.35rem 0;
 	border-bottom: 1px solid var(--border);
+	max-height: 20rem;
+	overflow: hidden;
+	opacity: 1;
+	transition: opacity 0.14s ease, max-height 0.18s ease, padding 0.18s ease, margin 0.18s ease, border-color 0.14s ease;
+}
+
+.tribune li.thread-hidden {
+	opacity: 0;
+	max-height: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+	margin: 0;
+	border-bottom-color: transparent;
+	pointer-events: none;
 }
 
 .tribune li:last-child { border-bottom: none; }

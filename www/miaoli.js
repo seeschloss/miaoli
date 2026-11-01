@@ -305,7 +305,7 @@ Tribune.prototype.toggleThread = function (post, btn) {
 
 	if (this._threadFocused === post) {
 		// restore
-		allPosts.forEach(function (li) { li.style.display = ''; });
+		allPosts.forEach(function (li) { li.classList.remove('thread-hidden'); });
 		this._threadFocused = null;
 		btn.textContent = 'thread';
 		return;
@@ -337,7 +337,11 @@ Tribune.prototype.toggleThread = function (post, btn) {
 	}
 
 	allPosts.forEach(function (li) {
-		li.style.display = inThread.has(li) ? '' : 'none';
+		if (inThread.has(li)) {
+			li.classList.remove('thread-hidden');
+		} else {
+			li.classList.add('thread-hidden');
+		}
 	});
 	this._threadFocused = post;
 	btn.textContent = 'all';
