@@ -32,19 +32,13 @@ a.configure {
 }
 
 .new {
-	display: inline-block;
-	padding: 0.25rem 0.7rem;
-	border: 1px dashed var(--border);
-	border-radius: 999px;
 	color: var(--accent);
 	font-style: normal;
-	font-size: 0.9rem;
 	text-decoration: none;
+	font-weight: 500;
 }
 .new:hover {
-	border-style: solid;
-	background: var(--surface);
-	text-decoration: none;
+	text-decoration: underline;
 }
 .new::before {
 	content: "+ ";
