@@ -7,6 +7,21 @@ function Tribune(dom) {
 
 	this.postsList = dom.querySelector('ol');
 
+	this.threadBanner = document.createElement('div');
+	this.threadBanner.className = 'thread-banner';
+	this.threadBanner.textContent = 'Showing a thread · show all posts';
+	var selfBanner = this;
+	this.threadBanner.addEventListener('click', function () {
+		if (selfBanner._threadFocused) {
+			var btn = null;
+			selfBanner.toggleThread(selfBanner._threadFocused, btn);
+		}
+	});
+	var pinnipede = dom.querySelector('.pinnipede');
+	if (pinnipede && pinnipede.parentNode) {
+		pinnipede.parentNode.insertBefore(this.threadBanner, pinnipede);
+	}
+
 	this.id = dom.dataset.tribuneId;
 	this.max_posts = +dom.dataset.maxPosts;
 
@@ -188,19 +203,22 @@ Tribune.prototype.setup_events = function(elements) {
 			timeEl.title = 'Click to quote this post';
 		}
 
-		var threadBtn = document.createElement('button');
-		threadBtn.type = 'button';
-		threadBtn.className = 'thread-toggle';
-		threadBtn.textContent = 'thread';
-		threadBtn.title = 'Focus this thread';
+		var affordance = document.createElement('span');
+		affordance.className = 'thread-affordance';
+		affordance.textContent = '↳';
+		affordance.title = 'Focus this thread';
 		var self = this;
-		(function (capturedPost, capturedBtn) {
-			capturedBtn.addEventListener('click', function (e) {
+		(function (capturedPost, capturedAffordance) {
+			capturedAffordance.addEventListener('click', function (e) {
 				e.preventDefault();
-				self.toggleThread(capturedPost, capturedBtn);
+				e.stopPropagation();
+				self.toggleThread(capturedPost, capturedAffordance);
 			});
-		})(post, threadBtn);
-		post.querySelector('.post').insertBefore(threadBtn, post.querySelector('.message'));
+		})(post, affordance);
+		var timeEl2 = post.querySelector('.time');
+		if (timeEl2 && timeEl2.parentNode) {
+			timeEl2.parentNode.insertBefore(affordance, timeEl2.nextSibling);
+		}
 
 		var totozes = post.querySelectorAll('.totoz');
 		for (var j = 0, totoz; j < totozes.length, totoz = totozes[j]; j++) {
@@ -307,7 +325,7 @@ Tribune.prototype.toggleThread = function (post, btn) {
 		// restore
 		allPosts.forEach(function (li) { li.classList.remove('thread-hidden'); });
 		this._threadFocused = null;
-		btn.textContent = 'thread';
+		if (this.threadBanner) { this.threadBanner.classList.remove('visible'); }
 		return;
 	}
 
@@ -344,7 +362,7 @@ Tribune.prototype.toggleThread = function (post, btn) {
 		}
 	});
 	this._threadFocused = post;
-	btn.textContent = 'all';
+	if (this.threadBanner) { this.threadBanner.classList.add('visible'); }
 };
 
 Tribune.prototype.insert_element_in_message = function(element) {

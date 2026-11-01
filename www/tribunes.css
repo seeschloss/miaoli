@@ -42,20 +42,38 @@
 
 .tribune li:last-child { border-bottom: none; }
 
-.thread-toggle {
-	margin-left: 0.4rem;
-	padding: 0.05rem 0.45rem;
-	border: 1px solid var(--border);
-	border-radius: 999px;
-	background: transparent;
-	color: var(--muted);
-	font-size: 0.7rem;
+.thread-affordance {
+	display: none;
+	margin-left: 0.35rem;
 	cursor: pointer;
+	color: var(--muted);
+	font-size: 0.85rem;
+	user-select: none;
 	vertical-align: middle;
 }
-.thread-toggle:hover {
+.tribune .post:hover .thread-affordance {
+	display: inline-block;
+}
+.thread-affordance:hover {
 	color: var(--accent);
-	border-color: var(--accent);
+}
+
+.thread-banner {
+	display: none;
+	padding: 0.4rem 0.75rem;
+	margin-bottom: 0.5rem;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	color: var(--muted);
+	font-size: 0.85rem;
+	cursor: pointer;
+}
+.thread-banner.visible {
+	display: block;
+}
+.thread-banner:hover {
+	color: var(--accent);
 }
 
 .tribune .time {
