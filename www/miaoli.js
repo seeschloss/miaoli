@@ -194,10 +194,12 @@ Tribune.prototype.setup_events = function(elements) {
 		threadBtn.textContent = 'thread';
 		threadBtn.title = 'Focus this thread';
 		var self = this;
-		threadBtn.addEventListener('click', function (e) {
-			e.preventDefault();
-			self.toggleThread(post, threadBtn);
-		});
+		(function (capturedPost, capturedBtn) {
+			capturedBtn.addEventListener('click', function (e) {
+				e.preventDefault();
+				self.toggleThread(capturedPost, capturedBtn);
+			});
+		})(post, threadBtn);
 		post.querySelector('.post').insertBefore(threadBtn, post.querySelector('.message'));
 
 		var totozes = post.querySelectorAll('.totoz');
