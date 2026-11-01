@@ -60,7 +60,7 @@ CSS;
 
 		$multi = count($this->tribunes) > 1;
 
-		$html .= "<div class='pinnipede'><ol>";
+		$html .= "<div class='pinnipede'><ol role='log' aria-live='polite' aria-relevant='additions'>";
 		foreach ($this->latest_posts() as $post) {
 			$post_html = $post->html();
 			if ($multi) {
