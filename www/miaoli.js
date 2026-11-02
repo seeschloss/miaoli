@@ -196,6 +196,24 @@ Tribune.prototype.setup_events = function(elements) {
 				setTimeout(function() { self.reset_highlight(); }, 1500);
 			});
 			reference.style.cursor = 'pointer';
+
+			var refAffordance = document.createElement('span');
+			refAffordance.className = 'ref-thread';
+			refAffordance.textContent = '↳';
+			refAffordance.title = 'Focus this thread';
+			(function (capturedRef) {
+				refAffordance.addEventListener('click', function (e) {
+					e.preventDefault();
+					e.stopPropagation();
+					self.mouse_over(capturedRef);
+					var highlighted = self.dom.querySelectorAll('li.highlighted');
+					if (highlighted.length) {
+						self.toggleThread(highlighted[0], null);
+					}
+					setTimeout(function() { self.reset_highlight(); }, 1500);
+				});
+			})(reference);
+			reference.appendChild(refAffordance);
 		}
 
 		var timeEl = post.querySelector('.time');
@@ -203,22 +221,7 @@ Tribune.prototype.setup_events = function(elements) {
 			timeEl.title = 'Click to quote this post';
 		}
 
-		var affordance = document.createElement('span');
-		affordance.className = 'thread-affordance';
-		affordance.textContent = '↳';
-		affordance.title = 'Focus this thread';
-		var self = this;
-		(function (capturedPost, capturedAffordance) {
-			capturedAffordance.addEventListener('click', function (e) {
-				e.preventDefault();
-				e.stopPropagation();
-				self.toggleThread(capturedPost, capturedAffordance);
-			});
-		})(post, affordance);
-		var timeEl2 = post.querySelector('.time');
-		if (timeEl2 && timeEl2.parentNode) {
-			timeEl2.parentNode.insertBefore(affordance, timeEl2.nextSibling);
-		}
+		// (affordance is attached to clock references below)
 
 		var totozes = post.querySelectorAll('.totoz');
 		for (var j = 0, totoz; j < totozes.length, totoz = totozes[j]; j++) {

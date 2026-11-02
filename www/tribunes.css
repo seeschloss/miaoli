@@ -162,6 +162,7 @@
 }
 
 .tribune .clock-reference {
+	position: relative;
 	background: var(--border);
 	color: var(--muted);
 	border-radius: 999px;
@@ -169,6 +170,26 @@
 	margin: 0 0.1rem;
 	cursor: default;
 	font-size: 0.85em;
+}
+
+.ref-thread {
+	position: absolute;
+	left: 100%;
+	top: 50%;
+	transform: translateY(-50%);
+	margin-left: 0.25rem;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.12s ease;
+	color: var(--accent);
+	font-size: 0.85em;
+	cursor: pointer;
+	user-select: none;
+}
+
+.clock-reference:hover .ref-thread {
+	opacity: 1;
+	pointer-events: auto;
 }
 
 .tribune .message .clock-reference {
