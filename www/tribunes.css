@@ -163,13 +163,20 @@
 
 .tribune .clock-reference {
 	position: relative;
+	z-index: 1;
 	background: var(--border);
 	color: var(--muted);
 	border-radius: 999px;
-	padding: 0 1.3rem 0 0.4rem;
+	padding: 0 0.4rem;
 	margin: 0 0.1rem;
 	cursor: default;
 	font-size: 0.85em;
+	transition: padding-right 0.14s ease, z-index 0s linear 0.14s;
+}
+
+.tribune .clock-reference:hover {
+	padding-right: 1.3rem;
+	z-index: 5;
 }
 
 .ref-thread {
@@ -179,7 +186,7 @@
 	transform: translateY(-50%);
 	opacity: 0;
 	pointer-events: none;
-	transition: opacity 0.12s ease;
+	transition: opacity 0.12s ease 0.04s;
 	color: var(--accent);
 	font-size: 0.85em;
 	cursor: pointer;
