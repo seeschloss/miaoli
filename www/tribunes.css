@@ -195,7 +195,7 @@
 
 .ref-thread {
 	position: absolute;
-	right: 0.25rem;
+	right: -0.9rem;
 	top: 50%;
 	transform: translateY(-50%);
 	opacity: 0;
