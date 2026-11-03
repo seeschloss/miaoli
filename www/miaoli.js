@@ -322,24 +322,43 @@ Tribune.prototype.mouse_over = function(reference) {
 	var self = this;
 	var timestamp = reference.dataset.timestamp;
 	var allPosts = Array.prototype.slice.call(this.postsList.querySelectorAll('li'));
+	var containerPost = reference.closest('li');
+	var containerIndex = containerPost ? allPosts.indexOf(containerPost) : allPosts.length;
+
 	var direct = allPosts.filter(function(li) {
 		return self.refMatches(li.querySelector('span.post').dataset.timestamp, timestamp);
 	});
 
-	var set = new Set();
+	var indirect = new Set();
 	direct.forEach(function(p) {
-		self.threadPosts(p).forEach(function(x) { set.add(x); });
+		self.threadPosts(p).forEach(function(x) {
+			if (direct.indexOf(x) === -1) {
+				indirect.add(x);
+			}
+		});
 	});
 
-	set.forEach(function(li) {
+	// Do not highlight posts that come after the hovered clock.
+	direct = direct.filter(function(li) {
+		return allPosts.indexOf(li) <= containerIndex;
+	});
+	indirect = new Set(Array.from(indirect).filter(function(li) {
+		return allPosts.indexOf(li) <= containerIndex;
+	}));
+
+	direct.forEach(function(li) {
 		li.classList.add('highlighted');
+	});
+	indirect.forEach(function(li) {
+		li.classList.add('highlighted-indirect');
 	});
 }
 
 Tribune.prototype.reset_highlight = function() {
-	var highlighted = this.dom.querySelectorAll('.highlighted');
+	var highlighted = this.dom.querySelectorAll('.highlighted, .highlighted-indirect');
 	for (var i = 0, element; i < highlighted.length, element = highlighted[i]; i++) {
 		element.classList.remove('highlighted');
+		element.classList.remove('highlighted-indirect');
 	}
 };
 

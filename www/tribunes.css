@@ -101,7 +101,12 @@
 }
 
 .tribune li.highlighted {
-	background: color-mix(in srgb, var(--accent) 10%, transparent);
+	background: color-mix(in srgb, var(--accent) 16%, transparent);
+	border-radius: 8px;
+}
+
+.tribune li.highlighted-indirect {
+	background: color-mix(in srgb, var(--accent) 6%, transparent);
 	border-radius: 8px;
 }
 
