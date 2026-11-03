@@ -281,21 +281,59 @@ Tribune.prototype.post = function(message) {
 	});
 };
 
+Tribune.prototype.threadPosts = function(startPost) {
+	var self = this;
+	var allPosts = Array.prototype.slice.call(this.postsList.querySelectorAll('li'));
+	var postTs = function(li) { return li.querySelector('span.post').dataset.timestamp; };
+	var refsOf = function(li) {
+		var out = [];
+		var refs = li.querySelectorAll('.clock-reference');
+		for (var i = 0; i < refs.length; i++) { out.push(refs[i].dataset.timestamp); }
+		return out;
+	};
+
+	var inThread = new Set();
+	var queue = [startPost];
+	inThread.add(startPost);
+	while (queue.length) {
+		var cur = queue.pop();
+		var curTs = postTs(cur);
+		refsOf(cur).forEach(function(ref) {
+			allPosts.forEach(function(p) {
+				if (!inThread.has(p) && self.refMatches(postTs(p), ref)) {
+					inThread.add(p);
+					queue.push(p);
+				}
+			});
+		});
+		allPosts.forEach(function(p) {
+			if (inThread.has(p)) { return; }
+			if (refsOf(p).some(function(r) { return self.refMatches(curTs, r); })) {
+				inThread.add(p);
+				queue.push(p);
+			}
+		});
+	}
+
+	return Array.from(inThread);
+};
+
 Tribune.prototype.mouse_over = function(reference) {
+	var self = this;
 	var timestamp = reference.dataset.timestamp;
-	var found = undefined;
+	var allPosts = Array.prototype.slice.call(this.postsList.querySelectorAll('li'));
+	var direct = allPosts.filter(function(li) {
+		return self.refMatches(li.querySelector('span.post').dataset.timestamp, timestamp);
+	});
 
-	if (timestamp.length == 4) {
-		found = this.dom.querySelectorAll('li[data-timestamp*="' + timestamp + '"]');
-	} else if (timestamp.length == 6 || timestamp.length == 14) {
-		found = this.dom.querySelectorAll('li[data-timestamp$="' + timestamp + '"]');
-	}
+	var set = new Set();
+	direct.forEach(function(p) {
+		self.threadPosts(p).forEach(function(x) { set.add(x); });
+	});
 
-	if (found && found.length > 0) {
-		for (var i = 0, post; i < found.length, post = found[i]; i++) {
-			post.classList.add('highlighted');
-		}
-	}
+	set.forEach(function(li) {
+		li.classList.add('highlighted');
+	});
 }
 
 Tribune.prototype.reset_highlight = function() {
@@ -332,30 +370,7 @@ Tribune.prototype.toggleThread = function (post, btn) {
 		return;
 	}
 
-	var inThread = new Set();
-	var queue = [post];
-	inThread.add(post);
-	while (queue.length) {
-		var cur = queue.pop();
-		var curTs = postTs(cur);
-		// posts referenced by cur
-		refsOf(cur).forEach(function (ref) {
-			allPosts.forEach(function (p) {
-				if (!inThread.has(p) && self.refMatches(postTs(p), ref)) {
-					inThread.add(p);
-					queue.push(p);
-				}
-			});
-		});
-		// posts referencing cur
-		allPosts.forEach(function (p) {
-			if (inThread.has(p)) { return; }
-			if (refsOf(p).some(function (r) { return self.refMatches(curTs, r); })) {
-				inThread.add(p);
-				queue.push(p);
-			}
-		});
-	}
+	var inThread = new Set(this.threadPosts(post));
 
 	allPosts.forEach(function (li) {
 		if (inThread.has(li)) {
