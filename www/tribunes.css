@@ -110,6 +110,11 @@
 	border-radius: 8px;
 }
 
+.tribune li.thread-muted {
+	opacity: 0.35;
+	transition: opacity 0.12s ease;
+}
+
 .tribune .tribune-source {
 	display: inline-block;
 	margin-right: 0.5rem;

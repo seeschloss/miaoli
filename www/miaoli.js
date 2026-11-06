@@ -180,12 +180,8 @@ Tribune.prototype.setup_events = function(elements) {
 
 		var references = post.querySelectorAll('.clock-reference');
 		for (var j = 0, reference; j < references.length, reference = references[j]; j++) {
-			reference.onmouseover = function() {
-				self.mouse_over(this);
-			};
-			reference.onmouseout = function() {
-				self.reset_highlight();
-			};
+			reference.onmouseover = function() {};
+			reference.onmouseout = function() {};
 			reference.addEventListener('click', function(e) {
 				e.preventDefault();
 				self.mouse_over(this);
@@ -197,23 +193,33 @@ Tribune.prototype.setup_events = function(elements) {
 			});
 			reference.style.cursor = 'pointer';
 
-			var refAffordance = document.createElement('span');
-			refAffordance.className = 'ref-thread';
-			refAffordance.textContent = '↳';
-			refAffordance.title = 'Focus this thread';
-			(function (capturedRef) {
-				refAffordance.addEventListener('click', function (e) {
+			(function(capturedPost, capturedRef) {
+				capturedRef.addEventListener('mouseenter', function() {
+					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
+					var direct = allPosts.filter(function(li) {
+						return self.refMatches(li.querySelector('span.post').dataset.timestamp, capturedRef.dataset.timestamp);
+					});
+					var keep = new Set();
+					direct.forEach(function(p) { self.threadPosts(p).forEach(function(x){ keep.add(x); }); });
+					allPosts.forEach(function(li) {
+						if (!keep.has(li)) { li.classList.add('thread-muted'); }
+					});
+				});
+				capturedRef.addEventListener('mouseleave', function() {
+					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
+					allPosts.forEach(function(li) { li.classList.remove('thread-muted'); });
+				});
+				capturedRef.addEventListener('click', function(e) {
 					e.preventDefault();
 					e.stopPropagation();
-					self.mouse_over(capturedRef);
-					var highlighted = self.dom.querySelectorAll('li.highlighted');
-					if (highlighted.length) {
-						self.toggleThread(highlighted[0], null);
-					}
-					setTimeout(function() { self.reset_highlight(); }, 1500);
+					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
+					var direct = allPosts.filter(function(li) {
+						return self.refMatches(li.querySelector('span.post').dataset.timestamp, capturedRef.dataset.timestamp);
+					});
+					var target = direct.length ? direct[0] : capturedPost;
+					if (target) { self.toggleThread(target, null); }
 				});
-			})(reference);
-			reference.appendChild(refAffordance);
+			})(post, reference);
 		}
 
 		var timeEl = post.querySelector('.time');
