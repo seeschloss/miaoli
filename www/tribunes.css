@@ -195,13 +195,7 @@
 	transition: width 0.14s ease;
 }
 
-.tribune .clock-reference:hover {
-	z-index: 5;
-}
-
-.tribune .clock-reference:hover::before {
-	width: calc(100% + 1.1rem);
-}
+/* no expanding affordance on hover */
 
 .ref-thread {
 	position: absolute;
