@@ -42,6 +42,7 @@ class Board {
 				.feed li.tribune-{$tribune->id} {
 					border-left: 4px solid {$tribune->color};
 					padding-left: 0.5rem;
+					background-color: {$color->to_css(0.08)};
 				}
 CSS;
 		}
