@@ -57,6 +57,7 @@ class Post extends Record {
 						data-tribune-id="{$this->tribune_id}"
 						data-post-id="{$this->post_id}"
 						data-timestamp="{$this->tribune_time()}"
+						data-useragent="'.htmlentities($this->useragent).'"
 						class="post">
 					<span class="time">{$time_formatted}</span>
 					<span class="username">{$username_formatted}</span>

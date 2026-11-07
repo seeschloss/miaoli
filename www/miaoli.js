@@ -240,6 +240,15 @@ Tribune.prototype.setup_events = function(elements) {
 			})(post);
 		}
 
+		// info pill
+		var infoPill = document.createElement('span');
+		infoPill.className = 'info-pill';
+		infoPill.textContent = 'i';
+		var postSpan = post.querySelector('span.post');
+		if (timeEl && timeEl.parentNode) {
+			timeEl.parentNode.insertBefore(infoPill, timeEl);
+		}
+
 		// (affordance is attached to clock references below)
 
 		var totozes = post.querySelectorAll('.totoz');
@@ -250,6 +259,8 @@ Tribune.prototype.setup_events = function(elements) {
 			totoz.appendChild(img);
 		}
 	}
+
+	self.updateInfoPills();
 };
 
 Tribune.prototype.nickname = function() {
@@ -419,6 +430,56 @@ Tribune.prototype.toggleThread = function (post, btn) {
 	});
 	this._threadFocused = post;
 	if (this.threadBanner) { this.threadBanner.classList.add('visible'); }
+};
+
+Tribune.prototype.updateInfoPills = function() {
+	var self = this;
+	var allPosts = Array.prototype.slice.call(this.postsList.querySelectorAll('li'));
+
+	// count answers per post timestamp
+	var answerCounts = {};
+	allPosts.forEach(function(li) {
+		var refs = li.querySelectorAll('.clock-reference');
+		for (var i = 0; i < refs.length; i++) {
+			var ts = refs[i].dataset.timestamp;
+			answerCounts[ts] = (answerCounts[ts] || 0) + 1;
+		}
+	});
+
+	allPosts.forEach(function(li) {
+		var postSpan = li.querySelector('span.post');
+		var infoPill = li.querySelector('.info-pill');
+		if (!infoPill || !postSpan) { return; }
+		var ts = postSpan.dataset.timestamp;
+		var tribuneTitle = postSpan.dataset.tribuneTitle || '';
+		var postId = postSpan.dataset.postId;
+		var useragent = postSpan.dataset.useragent || '';
+		var username = '';
+		var un = li.querySelector('.username');
+		if (un) { username = un.textContent; }
+
+		// format timestamp YYYYMMDDHHMMSS
+		var formatted = ts;
+		if (ts && ts.length === 14) {
+			formatted = ts.slice(0,4)+'-'+ts.slice(4,6)+'-'+ts.slice(6,8)+' '+ts.slice(8,10)+':'+ts.slice(10,12)+':'+ts.slice(12,14);
+		}
+
+		// answer count: match by suffix
+		var count = 0;
+		for (var key in answerCounts) {
+			if (self.refMatches(ts, key)) { count += answerCounts[key]; }
+		}
+
+		var lines = [];
+		if (tribuneTitle) { lines.push('Tribune: ' + tribuneTitle); }
+		lines.push('Post: #' + postId);
+		lines.push('Time: ' + formatted);
+		lines.push('User: ' + username);
+		if (useragent) { lines.push('Info: ' + useragent); }
+		lines.push('Answers: ' + count);
+
+		infoPill.title = lines.join('\\n');
+	});
 };
 
 Tribune.prototype.insert_element_in_message = function(element) {

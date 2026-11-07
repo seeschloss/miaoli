@@ -64,19 +64,17 @@ CSS;
 		$html .= "<div class='pinnipede'><ol role='log' aria-live='polite' aria-relevant='additions'>";
 		foreach ($this->latest_posts() as $post) {
 			$post_html = $post->html();
-			if ($multi) {
-				$source_title = '';
-				foreach ($this->tribunes as $tribune) {
-					if ($tribune->id == $post->tribune_id) {
-						$source_title = htmlentities($tribune->title);
-					}
+			$source_title = '';
+			foreach ($this->tribunes as $tribune) {
+				if ($tribune->id == $post->tribune_id) {
+					$source_title = htmlentities($tribune->title);
 				}
-				$post_html = str_replace(
-					'<span class="time">',
-					'<span class="time" title="'.$source_title.'">',
-					$post_html
-				);
 			}
+			$post_html = str_replace(
+				'<span class="post"',
+				'<span class="post" data-tribune-title="'.$source_title.'"',
+				$post_html
+			);
 			$html .= $post_html;
 		}
 		$html .= "</ol></div>";
