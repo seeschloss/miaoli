@@ -72,8 +72,8 @@ CSS;
 					}
 				}
 				$post_html = str_replace(
-					'<span class="username">',
-					'<span class="tribune-source">'.$source_title.'</span> <span class="username">',
+					'<span class="time">',
+					'<span class="time" title="'.$source_title.'">',
 					$post_html
 				);
 			}
