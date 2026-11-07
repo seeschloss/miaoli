@@ -225,6 +225,17 @@ Tribune.prototype.setup_events = function(elements) {
 		var timeEl = post.querySelector('.time');
 		if (timeEl) {
 			timeEl.title = 'Click to quote this post';
+			(function (capturedPost) {
+				timeEl.addEventListener('mouseenter', function() {
+					var thread = self.threadPosts(capturedPost);
+					thread.forEach(function(li) {
+						li.classList.add('highlighted');
+					});
+				});
+				timeEl.addEventListener('mouseleave', function() {
+					self.reset_highlight();
+				});
+			})(post);
 		}
 
 		// (affordance is attached to clock references below)
