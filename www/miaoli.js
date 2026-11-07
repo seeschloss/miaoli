@@ -227,13 +227,15 @@ Tribune.prototype.setup_events = function(elements) {
 			timeEl.title = 'Click to quote this post';
 			(function (capturedPost) {
 				timeEl.addEventListener('mouseenter', function() {
-					var thread = self.threadPosts(capturedPost);
-					thread.forEach(function(li) {
-						li.classList.add('highlighted');
+					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
+					var thread = new Set(self.threadPosts(capturedPost));
+					allPosts.forEach(function(li) {
+						if (!thread.has(li)) { li.classList.add('thread-muted'); }
 					});
 				});
 				timeEl.addEventListener('mouseleave', function() {
-					self.reset_highlight();
+					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
+					allPosts.forEach(function(li) { li.classList.remove('thread-muted'); });
 				});
 			})(post);
 		}
