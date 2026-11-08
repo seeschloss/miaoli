@@ -78,6 +78,7 @@
 
 .info-pill {
 	position: relative;
+	z-index: 5;
 	display: inline-block;
 	margin-right: 0.35rem;
 	width: 1.1rem;
@@ -97,8 +98,8 @@
 	display: none;
 	position: absolute;
 	left: 0;
-	top: 1.3rem;
-	z-index: 20;
+	bottom: 1.3rem;
+	z-index: 100;
 	min-width: 12rem;
 	max-width: 24rem;
 	padding: 0.5rem 0.65rem;
