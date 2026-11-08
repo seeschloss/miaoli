@@ -478,7 +478,13 @@ Tribune.prototype.updateInfoPills = function() {
 		if (useragent) { lines.push('Info: ' + useragent); }
 		lines.push('Answers: ' + count);
 
-		infoPill.title = lines.join('\\n');
+		var tooltip = infoPill.querySelector('.info-tooltip');
+		if (!tooltip) {
+			tooltip = document.createElement('div');
+			tooltip.className = 'info-tooltip';
+			infoPill.appendChild(tooltip);
+		}
+		tooltip.textContent = lines.join('\\n');
 	});
 };
 
