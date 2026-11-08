@@ -204,10 +204,21 @@ Tribune.prototype.setup_events = function(elements) {
 					allPosts.forEach(function(li) {
 						if (!keep.has(li)) { li.classList.add('thread-muted'); }
 					});
+					direct.forEach(function(p) {
+						var t = p.querySelector('.time');
+						if (t) { t.classList.add('clock-hover'); }
+					});
 				});
 				capturedRef.addEventListener('mouseleave', function() {
 					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
 					allPosts.forEach(function(li) { li.classList.remove('thread-muted'); });
+					var direct = allPosts.filter(function(li) {
+						return self.refMatches(li.querySelector('span.post').dataset.timestamp, capturedRef.dataset.timestamp);
+					});
+					direct.forEach(function(p) {
+						var t = p.querySelector('.time');
+						if (t) { t.classList.remove('clock-hover'); }
+					});
 				});
 				capturedRef.addEventListener('click', function(e) {
 					e.preventDefault();

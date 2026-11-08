@@ -137,7 +137,8 @@
 }
 
 .tribune .highlighted .time,
-.tribune .time:hover {
+.tribune .time:hover,
+.tribune .time.clock-hover {
 	background: var(--accent);
 	color: #fff;
 }
