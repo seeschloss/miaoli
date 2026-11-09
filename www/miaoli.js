@@ -354,13 +354,19 @@ Tribune.prototype.hoverCone = function(startPost) {
 		});
 	}
 
-	// Forward: only direct answers to the hovered post.
-	allPosts.forEach(function(p) {
-		if (result.has(p)) { return; }
-		if (refsOf(p).some(function(r) { return self.refMatches(postTs(startPost), r); })) {
-			result.add(p);
-		}
-	});
+	// Forward cone: transitive closure of posts that answer (reference) the hovered post.
+	var fwdQueue = [startPost];
+	while (fwdQueue.length) {
+		var curFwd = fwdQueue.pop();
+		var curFwdTs = postTs(curFwd);
+		allPosts.forEach(function(p) {
+			if (result.has(p)) { return; }
+			if (refsOf(p).some(function(r) { return self.refMatches(curFwdTs, r); })) {
+				result.add(p);
+				fwdQueue.push(p);
+			}
+		});
+	}
 
 	return Array.from(result);
 };
