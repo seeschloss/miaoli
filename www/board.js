@@ -1,6 +1,11 @@
 // vim: ts=4 sw=4
 "use strict";
 
+// Wait briefly before repainting, then keep the state long enough to hand off
+// between adjacent clocks without blinking.
+var CLOCK_HOVER_DELAY = 20;
+var CLOCK_HOVER_GRACE = 120;
+
 function Tribune(dom) {
 	this.dom = dom;
 	this.dom.classList.add('js-enabled');
@@ -180,8 +185,6 @@ Tribune.prototype.setup_events = function(elements) {
 
 		var references = post.querySelectorAll('.clock-reference');
 		for (var j = 0, reference; j < references.length, reference = references[j]; j++) {
-			reference.onmouseover = function() {};
-			reference.onmouseout = function() {};
 			reference.addEventListener('click', function(e) {
 				e.preventDefault();
 				self.mouse_over(this);
@@ -195,46 +198,12 @@ Tribune.prototype.setup_events = function(elements) {
 
 			(function(capturedPost, capturedRef) {
 				capturedRef.addEventListener('mouseenter', function() {
-					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
-					var direct = allPosts.filter(function(li) {
-						return self.refMatches(li.querySelector('span.post').dataset.timestamp, capturedRef.dataset.timestamp);
-					});
-					var keep = new Set();
-					direct.forEach(function(p) { self.hoverCone(p).forEach(function(x){ keep.add(x); }); });
-					if (direct.length === 0) {
-						// fallback to container post
-						self.hoverCone(capturedPost).forEach(function(x){ keep.add(x); });
-					}
-					allPosts.forEach(function(li) {
-						if (!keep.has(li)) { li.classList.add('thread-muted'); }
-					});
-					direct.forEach(function(p) {
-						var t = p.querySelector('.time');
-						if (t) { t.classList.add('clock-hover'); }
-					});
-					// highlight all immediate references to the referenced post
-					var refTs = capturedRef.dataset.timestamp;
-					allPosts.forEach(function(li) {
-						var refs = li.querySelectorAll('.clock-reference');
-						for (var i = 0; i < refs.length; i++) {
-							if (self.refMatches(direct.length ? direct[0].querySelector('span.post').dataset.timestamp : refTs, refs[i].dataset.timestamp)) {
-								refs[i].classList.add('clock-hover');
-							}
-						}
+					self.schedule_clock_hover(function() {
+						self.hover_reference(capturedPost, capturedRef);
 					});
 				});
 				capturedRef.addEventListener('mouseleave', function() {
-					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
-					allPosts.forEach(function(li) { li.classList.remove('thread-muted'); });
-					var refs = self.postsList.querySelectorAll('.clock-reference.clock-hover');
-					for (var i = 0; i < refs.length; i++) { refs[i].classList.remove('clock-hover'); }
-					var direct = allPosts.filter(function(li) {
-						return self.refMatches(li.querySelector('span.post').dataset.timestamp, capturedRef.dataset.timestamp);
-					});
-					direct.forEach(function(p) {
-						var t = p.querySelector('.time');
-						if (t) { t.classList.remove('clock-hover'); }
-					});
+					self.schedule_clock_hover_clear();
 				});
 				capturedRef.addEventListener('click', function(e) {
 					e.preventDefault();
@@ -254,30 +223,12 @@ Tribune.prototype.setup_events = function(elements) {
 			timeEl.title = 'Click to quote this post';
 			(function (capturedPost) {
 				timeEl.addEventListener('mouseenter', function() {
-					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
-					var cone = new Set(self.hoverCone(capturedPost));
-					allPosts.forEach(function(li) {
-						if (!cone.has(li)) { li.classList.add('thread-muted'); }
-					});
-					var ts = capturedPost.querySelector('span.post').dataset.timestamp;
-					allPosts.forEach(function(li) {
-						var refs = li.querySelectorAll('.clock-reference');
-						for (var i = 0; i < refs.length; i++) {
-							if (self.refMatches(ts, refs[i].dataset.timestamp)) {
-								refs[i].classList.add('clock-hover');
-							}
-						}
+					self.schedule_clock_hover(function() {
+						self.hover_time(capturedPost);
 					});
 				});
 				timeEl.addEventListener('mouseleave', function() {
-					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
-					allPosts.forEach(function(li) { li.classList.remove('thread-muted'); });
-					allPosts.forEach(function(li) {
-						var refs = li.querySelectorAll('.clock-reference.clock-hover');
-						for (var i = 0; i < refs.length; i++) {
-							refs[i].classList.remove('clock-hover');
-						}
-					});
+					self.schedule_clock_hover_clear();
 				});
 			})(post);
 		}
@@ -477,6 +428,102 @@ Tribune.prototype.reset_highlight = function() {
 		element.classList.remove('highlighted');
 		element.classList.remove('highlighted-indirect');
 	}
+};
+
+Tribune.prototype.hover_reference = function (capturedPost, capturedRef) {
+	if (!this.postsList.contains(capturedPost) || !this.postsList.contains(capturedRef)) { return; }
+
+	var self = this;
+	var allPosts = Array.prototype.slice.call(this.postsList.querySelectorAll('li'));
+	var direct = allPosts.filter(function(li) {
+		return self.refMatches(li.querySelector('span.post').dataset.timestamp, capturedRef.dataset.timestamp);
+	});
+	var keep = new Set();
+	direct.forEach(function(p) { self.hoverCone(p).forEach(function(x){ keep.add(x); }); });
+	if (direct.length === 0) {
+		// fallback to container post
+		self.hoverCone(capturedPost).forEach(function(x){ keep.add(x); });
+	}
+	allPosts.forEach(function(li) {
+		if (!keep.has(li)) { li.classList.add('thread-muted'); }
+	});
+	direct.forEach(function(p) {
+		var t = p.querySelector('.time');
+		if (t) { t.classList.add('clock-hover'); }
+	});
+	// highlight all immediate references to the referenced post
+	var refTs = capturedRef.dataset.timestamp;
+	allPosts.forEach(function(li) {
+		var refs = li.querySelectorAll('.clock-reference');
+		for (var i = 0; i < refs.length; i++) {
+			if (self.refMatches(direct.length ? direct[0].querySelector('span.post').dataset.timestamp : refTs, refs[i].dataset.timestamp)) {
+				refs[i].classList.add('clock-hover');
+			}
+		}
+	});
+};
+
+Tribune.prototype.hover_time = function (capturedPost) {
+	if (!this.postsList.contains(capturedPost)) { return; }
+
+	var self = this;
+	var allPosts = Array.prototype.slice.call(this.postsList.querySelectorAll('li'));
+	var cone = new Set(self.hoverCone(capturedPost));
+	allPosts.forEach(function(li) {
+		if (!cone.has(li)) { li.classList.add('thread-muted'); }
+	});
+	var ts = capturedPost.querySelector('span.post').dataset.timestamp;
+	allPosts.forEach(function(li) {
+		var refs = li.querySelectorAll('.clock-reference');
+		for (var i = 0; i < refs.length; i++) {
+			if (self.refMatches(ts, refs[i].dataset.timestamp)) {
+				refs[i].classList.add('clock-hover');
+			}
+		}
+	});
+};
+
+Tribune.prototype.clear_clock_hover = function () {
+	var posts = this.postsList.querySelectorAll('li');
+	for (var i = 0; i < posts.length; i++) {
+		posts[i].classList.remove('thread-muted');
+	}
+
+	var refs = this.postsList.querySelectorAll('.clock-reference.clock-hover');
+	for (var i = 0; i < refs.length; i++) {
+		refs[i].classList.remove('clock-hover');
+	}
+
+	var times = this.postsList.querySelectorAll('.time.clock-hover');
+	for (var i = 0; i < times.length; i++) {
+		times[i].classList.remove('clock-hover');
+	}
+};
+
+Tribune.prototype.cancel_clock_hover = function () {
+	clearTimeout(this._clockHoverApplyTimer);
+	clearTimeout(this._clockHoverClearTimer);
+	this._clockHoverApplyTimer = null;
+	this._clockHoverClearTimer = null;
+};
+
+Tribune.prototype.schedule_clock_hover = function (apply) {
+	var self = this;
+	this.cancel_clock_hover();
+	this._clockHoverApplyTimer = setTimeout(function () {
+		self._clockHoverApplyTimer = null;
+		self.clear_clock_hover();
+		apply();
+	}, CLOCK_HOVER_DELAY);
+};
+
+Tribune.prototype.schedule_clock_hover_clear = function () {
+	var self = this;
+	this.cancel_clock_hover();
+	this._clockHoverClearTimer = setTimeout(function () {
+		self._clockHoverClearTimer = null;
+		self.clear_clock_hover();
+	}, CLOCK_HOVER_GRACE);
 };
 
 Tribune.prototype.refMatches = function (postTs, refTs) {

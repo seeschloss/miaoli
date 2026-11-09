@@ -1354,7 +1354,6 @@ button {
 	border-radius: 6px;
 	background: transparent;
 	color: var(--text-soft);
-	font-family: var(--font-mono);
 	font-size: 11.5px;
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
@@ -1440,7 +1439,6 @@ button {
 	border-radius: 5px;
 	background: var(--accent-soft);
 	color: var(--accent);
-	font-family: var(--font-mono);
 	font-size: 0.9em;
 	cursor: pointer;
 }
@@ -2043,7 +2041,7 @@ kbd {
 }
 
 .feed.tribune .pinnipede > ol > li.thread-muted {
-	opacity: 0.32;
+	opacity: 0.5;
 }
 
 .feed.tribune span.post {
@@ -2086,7 +2084,6 @@ kbd {
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--surface) 70%, transparent);
 	color: var(--text-soft);
-	font-family: var(--font-mono);
 	font-size: 11.5px;
 	font-weight: 650;
 	font-variant-numeric: tabular-nums;
@@ -2152,7 +2149,6 @@ kbd {
 	border-radius: 5px;
 	background: color-mix(in srgb, var(--accent) 10%, transparent);
 	color: var(--accent);
-	font-family: var(--font-mono);
 	font-size: 0.9em;
 	cursor: pointer;
 	z-index: 1;
