@@ -71,8 +71,8 @@ CSS;
 				}
 			}
 			$post_html = str_replace(
-				'<span class="post"',
-				'<span class="post" data-tribune-title="'.$source_title.'"',
+				'class="post">',
+				'class="post" data-tribune-title="'.$source_title.'">',
 				$post_html
 			);
 			$html .= $post_html;
