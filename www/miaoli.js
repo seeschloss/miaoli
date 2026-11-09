@@ -200,7 +200,11 @@ Tribune.prototype.setup_events = function(elements) {
 						return self.refMatches(li.querySelector('span.post').dataset.timestamp, capturedRef.dataset.timestamp);
 					});
 					var keep = new Set();
-					direct.forEach(function(p) { self.threadPosts(p).forEach(function(x){ keep.add(x); }); });
+					direct.forEach(function(p) { self.hoverCone(p).forEach(function(x){ keep.add(x); }); });
+					if (direct.length === 0) {
+						// fallback to container post
+						self.hoverCone(capturedPost).forEach(function(x){ keep.add(x); });
+					}
 					allPosts.forEach(function(li) {
 						if (!keep.has(li)) { li.classList.add('thread-muted'); }
 					});
@@ -239,9 +243,9 @@ Tribune.prototype.setup_events = function(elements) {
 			(function (capturedPost) {
 				timeEl.addEventListener('mouseenter', function() {
 					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
-					var thread = new Set(self.threadPosts(capturedPost));
+					var cone = new Set(self.hoverCone(capturedPost));
 					allPosts.forEach(function(li) {
-						if (!thread.has(li)) { li.classList.add('thread-muted'); }
+						if (!cone.has(li)) { li.classList.add('thread-muted'); }
 					});
 				});
 				timeEl.addEventListener('mouseleave', function() {
@@ -320,6 +324,45 @@ Tribune.prototype.post = function(message) {
 			}
 		}
 	});
+};
+
+Tribune.prototype.hoverCone = function(startPost) {
+	var self = this;
+	var allPosts = Array.prototype.slice.call(this.postsList.querySelectorAll('li'));
+	var postTs = function(li) { return li.querySelector('span.post').dataset.timestamp; };
+	var refsOf = function(li) {
+		var out = [];
+		var refs = li.querySelectorAll('.clock-reference');
+		for (var i = 0; i < refs.length; i++) { out.push(refs[i].dataset.timestamp); }
+		return out;
+	};
+
+	var result = new Set();
+	result.add(startPost);
+
+	// Backward cone: transitive closure of posts that startPost (and its quotes) quote.
+	var queue = [startPost];
+	while (queue.length) {
+		var cur = queue.pop();
+		refsOf(cur).forEach(function(ref) {
+			allPosts.forEach(function(p) {
+				if (!result.has(p) && self.refMatches(postTs(p), ref)) {
+					result.add(p);
+					queue.push(p);
+				}
+			});
+		});
+	}
+
+	// Forward: only direct answers to the hovered post.
+	allPosts.forEach(function(p) {
+		if (result.has(p)) { return; }
+		if (refsOf(p).some(function(r) { return self.refMatches(postTs(startPost), r); })) {
+			result.add(p);
+		}
+	});
+
+	return Array.from(result);
 };
 
 Tribune.prototype.threadPosts = function(startPost) {
