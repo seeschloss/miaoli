@@ -212,10 +212,22 @@ Tribune.prototype.setup_events = function(elements) {
 						var t = p.querySelector('.time');
 						if (t) { t.classList.add('clock-hover'); }
 					});
+					// highlight all immediate references to the referenced post
+					var refTs = capturedRef.dataset.timestamp;
+					allPosts.forEach(function(li) {
+						var refs = li.querySelectorAll('.clock-reference');
+						for (var i = 0; i < refs.length; i++) {
+							if (self.refMatches(direct.length ? direct[0].querySelector('span.post').dataset.timestamp : refTs, refs[i].dataset.timestamp)) {
+								refs[i].classList.add('clock-hover');
+							}
+						}
+					});
 				});
 				capturedRef.addEventListener('mouseleave', function() {
 					var allPosts = Array.prototype.slice.call(self.postsList.querySelectorAll('li'));
 					allPosts.forEach(function(li) { li.classList.remove('thread-muted'); });
+					var refs = self.postsList.querySelectorAll('.clock-reference.clock-hover');
+					for (var i = 0; i < refs.length; i++) { refs[i].classList.remove('clock-hover'); }
 					var direct = allPosts.filter(function(li) {
 						return self.refMatches(li.querySelector('span.post').dataset.timestamp, capturedRef.dataset.timestamp);
 					});
