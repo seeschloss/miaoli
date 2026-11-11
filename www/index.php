@@ -50,7 +50,7 @@ if ($router->handle($_SERVER['REQUEST_URI'], $_GET, $_POST)) {
 if (isset($parts[1][0]) and $parts[1][0] === '@') {
 	$page_user = User::load_from_url($parts[1]);
 
-	if ($parts[2][0] === '+') {
+	if (isset($parts[2][0]) and $parts[2][0] === '+') {
 		$page_tribune = Tribune::load_from_url($parts[2]);
 	}
 } else if (strlen($parts[1]) > 1 and $parts[1][0] === '+') {
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$tribune_id = false;
 	if (!empty($_POST['tribune_id'])) {
 		$tribune_id = $_POST['tribune_id'];
-	} else if (count($parts) > 1 && $parts[1][0] === '+') {
+	} else if (count($parts) > 1 && isset($parts[1][0]) && $parts[1][0] === '+') {
 		$tribune_id = mb_substr($parts[1], 1);
 	}
 
@@ -109,11 +109,16 @@ if ($parts[1] === 'register') {
 	$theme->content = $site->form_userlogin($_POST['username'] ?? '');
 } else if ($parts[1] === 'logout') {
 	$site->session_destroy();
-} else if ($site->user and $parts[1] === $site->user->home_url() and $parts[2] === '+') {
+
+	header('HTTP/1.0 302 Found');
+	header('Location: /');
+	die();
+} else if ($site->user and $parts[1] === $site->user->home_url() and ($parts[2] ?? '') === '+') {
 	$tribune = new Tribune();
 	$tribune->user_id = $site->user->id;
 	$tribune->created = time();
 	$tribune->generate_title();
+	$tribune->generate_color();
 	$tribune->generate_id();
 	if ($tribune->insert()) {
 		header('HTTP/1.0 302 Found');

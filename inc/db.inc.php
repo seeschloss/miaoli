@@ -46,7 +46,7 @@ class DB {
 			);',
 
 			'CREATE TABLE feeds (
-				id INTEGER,
+				id INTEGER PRIMARY KEY,
 				machine_name TEXT,
 				user_id INTEGER,
 				title TEXT,

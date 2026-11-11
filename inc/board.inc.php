@@ -22,6 +22,10 @@ class Board {
 	}
 
 	function latest_posts() {
+		if (!count($this->tribunes)) {
+			return [];
+		}
+
 		foreach ($this->tribunes as $tribune) {
 			if ($tribune->remote_backend_url) {
 				$tribune->synchronize_from_backend();
@@ -37,14 +41,7 @@ class Board {
 	function css() {
 		$css = "";
 		foreach ($this->tribunes as $tribune) {
-			$color = new RGB($tribune->color);
-			$css .= <<<CSS
-				.feed li.tribune-{$tribune->id} {
-					border-left: 4px solid {$tribune->color};
-					padding-left: 0.5rem;
-					background-color: {$color->to_css(0.08)};
-				}
-CSS;
+			$css .= ".feed li.tribune-{$tribune->id} { --tribune-color: {$tribune->color}; }\n";
 		}
 
 		return $css;
@@ -67,7 +64,7 @@ CSS;
 			$source_title = '';
 			foreach ($this->tribunes as $tribune) {
 				if ($tribune->id == $post->tribune_id) {
-					$source_title = htmlentities($tribune->title);
+					$source_title = htmlspecialchars($tribune->title, ENT_QUOTES, 'UTF-8');
 				}
 			}
 			$post_html = str_replace(
@@ -132,19 +129,27 @@ CSS;
 		}
 
 		$post_url = $this->url;
+		$composer_tribune_class = "";
 		if (count($this->tribunes) == 1) {
 			$post_url = current($this->tribunes)->url();
 			$input_tribune->attributes['class'] = "hidden";
+			$composer_tribune_class = " hidden";
 		}
+		$input_tribune->attributes['aria-label'] = 'Post in tribune';
+		$send_icon = icon('send');
 
 		return <<<HTML
-			<form id="tribune-post" method="POST" action="/{$post_url}">
-				{$input_tribune->html()}
-				<input type="text" name="message" id="message-input" />
-				<button type="submit">⏎</button>
+			<form id="tribune-post" class="composer" method="POST" action="/{$post_url}">
+				<div class="composer-tribune{$composer_tribune_class}">{$input_tribune->html()}</div>
+				<div class="composer-main">
+					<div class="composer-field">
+						<input type="text" name="message" id="message-input" placeholder="Write a message…" autocomplete="off" aria-label="Message" />
+						<button type="submit" class="composer-send" aria-label="Send message" title="Send (Enter)">{$send_icon}</button>
+					</div>
+				</div>
 			</form>
 			<script type="text/javascript" src="/puli.js"></script>
-			<script type="text/javascript" src="/miaoli.js"></script>
+			<script type="text/javascript" src="/board.js"></script>
 HTML;
 	}
 }

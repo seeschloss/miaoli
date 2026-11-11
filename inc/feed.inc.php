@@ -42,6 +42,10 @@ class Feed extends Record {
 	}
 
 	function tribunes() {
+		if (!is_array($this->tribune_ids) or !count($this->tribune_ids)) {
+			return [];
+		}
+
 		return Tribune::select(['id IN ('.implode(',', $this->tribune_ids).')']);
 	}
 
@@ -86,29 +90,65 @@ class Feed extends Record {
 		$input_title = new HTML_Input("feed-title");
 		$input_title->name = "title";
 		$input_title->value = $this->title;
+		$input_title->attributes['maxlength'] = 100;
 
 		$input_description = new HTML_Textarea("feed-description");
 		$input_description->name = "description";
 		$input_description->value = $this->description;
+		$input_description->attributes['rows'] = 3;
+
+		$user = User::load_from_id($this->user_id);
+		$form_url = $this->id
+			? '/'.$this->url().'/edit'
+			: ($user ? '/'.$user->home_url().'/new-feed' : '/new-feed');
 
 		$user_tribunes = Tribune::select(['user_id' => $this->user_id, 'deleted' => '0']);
+		$tribune_boxes = [];
+		foreach ($user_tribunes as $tribune) {
+			$checked = (is_array($this->tribune_ids) and in_array($tribune->id, $this->tribune_ids)) ? ' checked="checked"' : '';
+			$tribune_title = htmlspecialchars($tribune->title, ENT_QUOTES, 'UTF-8');
+			$tribune_boxes[] = <<<HTML
+				<label class="checkbox-item">
+					<input type="checkbox" name="tribune_ids[]" value="{$tribune->id}"{$checked} />
+					<span class="space-dot" style="--space-color: {$tribune->color}"></span>
+					<span>{$tribune_title}</span>
+				</label>
+HTML;
+		}
 
-		$input_tribunes = new HTML_Select("feed-tribune-ids");
-		$input_tribunes->name = "tribune_ids[]";
-		$input_tribunes->options = array_map(function($tribune) { return $tribune->title; }, $user_tribunes);
-		$input_tribunes->selected = $this->tribune_ids;
-		$input_tribunes->attributes['size'] = max(8, count($user_tribunes));
-		$input_tribunes->attributes['multiple'] = "multiple";
+		if (!count($tribune_boxes)) {
+			$tribune_boxes[] = '<p class="field-hint">Create a tribune first.</p>';
+		}
+
+		$boxes_html = implode('', $tribune_boxes);
+		$eyebrow_html = $this->id ? '<p class="eyebrow">Feed settings</p>' : '';
+		$heading = $this->id ? htmlspecialchars($this->title, ENT_QUOTES, 'UTF-8') : 'New feed';
+		$form_url = htmlspecialchars($form_url, ENT_QUOTES, 'UTF-8');
+		$intro = $this->id
+			? 'Choose tribunes for this feed.'
+			: 'Choose tribunes to combine.';
 
 		return <<<HTML
-			<form method="POST" action="/{$this->url()}/edit">
-				<input type="hidden" name="feed_id" value="{$this->id}" />
-				<input type="hidden" name="action" value="feed-edit" />
-				<p>{$input_title->html("Title")}</p>
-				<p>{$input_description->html("Short description")}</p>
-				<p>{$input_tribunes->html("Included tribunes")}</p>
-				<p><button type="submit">Save</button></p>
-			</form>
+			<div class="form-page">
+				<div class="page-head">
+					{$eyebrow_html}
+					<h1>{$heading}</h1>
+					<p class="form-intro">{$intro}</p>
+				</div>
+				<form class="form-card" method="POST" action="{$form_url}">
+					<input type="hidden" name="feed_id" value="{$this->id}" />
+					<input type="hidden" name="action" value="feed-edit" />
+					<div class="field">{$input_title->html("Title")}</div>
+					<div class="field">{$input_description->html("Short description")}</div>
+					<fieldset class="field checkbox-field">
+						<legend>Included tribunes</legend>
+						<div class="checkbox-list">{$boxes_html}</div>
+					</fieldset>
+					<div class="form-actions">
+						<button class="button primary" type="submit">Save feed</button>
+					</div>
+				</form>
+			</div>
 HTML;
 	}
 
@@ -126,6 +166,7 @@ HTML;
 
 		if (isset($data['title'])) {
 			$this->title = trim($data['title']);
+			$this->tribune_ids = isset($data['tribune_ids']) ? $data['tribune_ids'] : [];
 
 			if (mb_strlen($this->title) > 100) {
 				$GLOBALS['form_errors']['title'] = 'Feed titles cannot be longer than 100 characters';

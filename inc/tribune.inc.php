@@ -13,6 +13,10 @@ class Tribune extends Record {
 	public $temporary = 0;
 	public $deleted = 0;
 	public $created = 0;
+	public $remote_backend_url = "";
+	public $remote_backend_type = "";
+	public $remote_post_url = "";
+	public $remote_post_format = "";
 
 	private $max_posts = 80;
 
@@ -100,7 +104,6 @@ class Tribune extends Record {
 
 		if (isset($data['color'])) {
 			$this->color = trim($data['color']);
-				var_dump($this->color);
 
 			if (!preg_match("/^#[0-9A-F]{6}$/i", $this->color)) {
 				$GLOBALS['form_errors']['color'] = 'Colors should be an hexadecimal RGB value in the form #42BF5E';
@@ -140,22 +143,38 @@ class Tribune extends Record {
 		$input_title = new HTML_Input("tribune-title");
 		$input_title->name = "title";
 		$input_title->value = $this->title;
+		$input_title->attributes['maxlength'] = 100;
 
 		$input_description = new HTML_Textarea("tribune-description");
 		$input_description->name = "description";
 		$input_description->value = $this->description;
+		$input_description->attributes['rows'] = 3;
 
 		$input_color = new HTML_Input_Color("tribune-color");
 		$input_color->name = "color";
 		$input_color->value = $this->color;
 
+		$eyebrow_html = $this->temporary ? '' : '<p class="eyebrow">Tribune settings</p>';
+		$heading = $this->temporary ? 'New tribune' : htmlspecialchars($this->title, ENT_QUOTES, 'UTF-8');
+		$intro_html = $this->temporary ? '<p class="form-intro">Name it and pick a colour.</p>' : '';
+		$open_link = $this->id ? '<a class="button ghost" href="/'.$this->url().'">'.icon('arrow-right').'<span>Open tribune</span></a>' : '';
+
 		$html = <<<HTML
-			<form method="POST" action="/{$this->url()}/edit">
-				<input type="hidden" name="tribune_id" value="{$this->id_base60()}" />
-				<input type="hidden" name="action" value="tribune-edit" />
-				<p>{$input_title->html("Title")}</p>
-				<p>{$input_description->html("Short description")}</p>
-				<p>{$input_color->html("Characteristic color")}</p>
+			<div class="form-page">
+				<div class="page-head">
+					{$eyebrow_html}
+					<h1>{$heading}</h1>
+					{$intro_html}
+				</div>
+				<form class="form-card" method="POST" action="/{$this->url()}/edit">
+					<input type="hidden" name="tribune_id" value="{$this->id_base60()}" />
+					<input type="hidden" name="action" value="tribune-edit" />
+					<div class="field">{$input_title->html("Title")}</div>
+					<div class="field">{$input_description->html("Short description")}</div>
+					<div class="field color-field">
+						{$input_color->html("Colour")}
+						<p class="field-hint">Used on this tribune's posts.</p>
+					</div>
 HTML;
 
 		if (!$this->temporary) {
@@ -176,19 +195,22 @@ HTML;
 			$input_remote_post_format->value = $this->remote_post_format;
 
 			$html .= <<<HTML
-					<input type="hidden" name="tribune_id" value="{$this->id_base60()}" />
-					<input type="hidden" name="action" value="tribune-remote" />
-					<p>{$input_remote_backend_url->html("Remote backend URL")}</p>
-					<p>{$input_remote_backend_type->html("Remote backend type")}</p>
-					<p>{$input_remote_post_url->html("Remote post URL")}</p>
-					<p>{$input_remote_post_format->html("Remote post format")}</p>
-
+					<details class="form-advanced">
+						<summary>Remote backend <span class="optional">advanced</span></summary>
+						<div class="field">{$input_remote_backend_url->html("Remote backend URL")}</div>
+						<div class="field">{$input_remote_backend_type->html("Remote backend type")}</div>
+						<div class="field">{$input_remote_post_url->html("Remote post URL")}</div>
+						<div class="field">{$input_remote_post_format->html("Remote post format")}</div>
+					</details>
 HTML;
 		}
 
 		$html .= <<<HTML
-				<p><button type="submit">Save</button></p>
-			</form>
+					<div class="form-actions">
+						<button class="button primary" type="submit">Save changes</button>
+						{$open_link}
+					</div>
+				</form>
 HTML;
 
 		if (!$this->temporary) {
@@ -199,23 +221,32 @@ HTML;
 				$input_machine_name = new HTML_Input("machine-name");
 				$input_machine_name->name = "machine_name";
 				$input_machine_name->value = $default_machine_name;
+				$input_machine_name->attributes['pattern'] = '[a-zA-Z0-9_-]+';
 
 				$html .= <<<HTML
-				<form method="POST" action="/{$this->url()}/edit">
+				<form class="form-card subtle-card" method="POST" action="/{$this->url()}/edit">
 					<input type="hidden" name="tribune_id" value="{$this->id_base60()}" />
 					<input type="hidden" name="action" value="tribune-machine-name" />
-					<p>{$input_machine_name->html("Identifier")}</p>
-					<p>This identifier will replace the default id ({$this->id_base60()}) in this tribune's URL.
-					   It is only a cosmetic change. This choice is definitive.</p>
-					<p><button class="warning" type="submit">Save</button></p>
+					<h2>Custom URL</h2>
+					<p class="form-intro">The current link uses {$this->id_base60()}. This cannot be undone.</p>
+					<div class="field">{$input_machine_name->html("Identifier")}</div>
+					<div class="form-actions">
+						<button class="button warning" type="submit">Change identifier</button>
+					</div>
 				</form>
 HTML;
 			} else {
+				$machine_name = htmlspecialchars($this->machine_name, ENT_QUOTES, 'UTF-8');
 				$html .= <<<HTML
-				<p><label for="machine-name">Identifier</label>: <span id="machine-name">{$this->machine_name}</span></p>
+				<div class="form-card subtle-card">
+					<h2>Custom URL</h2>
+					<p class="static-value"><span class="mono">{$machine_name}</span></p>
+				</div>
 HTML;
 			}
 		}
+
+		$html .= '</div>';
 
 		return $html;
 	}
@@ -306,8 +337,10 @@ HTML;
 	}
 
 	public function load($conditions = []) {
-		parent::load($conditions);
-		
+		if (parent::load($conditions) === false) {
+			return false;
+		}
+
 		if ($this->prune()) {
 			return 0;
 		}
@@ -416,21 +449,27 @@ HTML;
 		return "";
 	}
 
-	function link_with_configure() {
-		$html = '<a href="/'.$this->url().'">'.$this->title.'</a>';
-
+	function configure_url() {
 		if ($this->temporary) {
-			if (isset($_SESSION['anonymous_tribunes']) and count($_SESSION['anonymous_tribunes'])) {
+			if (isset($_SESSION['anonymous_tribunes'])) {
 				foreach ($_SESSION['anonymous_tribunes'] as $anonymous_tribune) {
-					if ($anonymous_tribune->id_base60 == $this->id_base60) {
-						$html .= ' <a class="configure" href="/'.$this->url().'/edit">configure</a>';
+					if ($anonymous_tribune->id == $this->id or $anonymous_tribune->id_base60() == $this->id_base60()) {
+						return '/'.$this->url().'/edit';
 					}
 				}
 			}
-		} else {
-			if (isset($_SESSION['user']) and $_SESSION['user']['id'] == $this->user_id) {
-				$html .= ' <a class="configure" href="/'.$this->url().'/edit">configure</a>';
-			}
+		} else if (isset($_SESSION['user']['id']) and $_SESSION['user']['id'] == $this->user_id) {
+			return '/'.$this->url().'/edit';
+		}
+
+		return '';
+	}
+
+	function link_with_configure() {
+		$html = '<a href="/'.$this->url().'">'.htmlspecialchars($this->title, ENT_QUOTES, 'UTF-8').'</a>';
+
+		if ($this->configure_url()) {
+			$html .= ' <a class="configure" href="'.$this->configure_url().'">'.icon('settings').' configure</a>';
 		}
 
 		return $html;

@@ -45,6 +45,7 @@ class Router {
 
 		$this->private_routes = [
 			'/new-feed' => [$this, 'feed_edit'],
+			'/<user>/new-feed' => [$this, 'feed_edit'],
 			'/<user>/:([^/]+)/edit' => [$this, 'feed_edit'],
 			'/<user>/\+([^/]+)/edit' => [$this, 'tribune_edit'],
 		];
@@ -88,14 +89,42 @@ class Router {
 		}
 
 		$tribunes = [];
+		$feeds = [];
 
 		if ($query) {
 			$tribunes = Tribune::select(['title LIKE' => '%'.$query.'%'], "id DESC", 10);
 			$feeds = Feed::select(['title LIKE' => '%'.$query.'%'], "id DESC", 10);
 		}
 
-		$this->theme->content = $this->theme->tribunes_list($tribunes, 'search-results');
-		$this->theme->content .= $this->theme->feeds_list($feeds, 'search-results');
+		$query_html = htmlspecialchars($query, ENT_QUOTES, 'UTF-8');
+		$this->theme->title = $query ? 'Search: '.$query : 'Search';
+
+		$html = '<div class="search-page">';
+		$html .= '<div class="page-head">';
+		$html .= $query ? '<h1>Results for “'.$query_html.'”</h1>' : '<h1>Search</h1>';
+		$html .= '</div>';
+
+		if ($query) {
+			if (!count($tribunes) and !count($feeds)) {
+				$html .= '<div class="empty-state"><span class="empty-icon">'.icon('search').'</span><p>No matches for “'.$query_html.'”.</p><a class="button primary" href="/+">'.icon('plus').'<span>Start a tribune</span></a></div>';
+			} else {
+				if (count($feeds)) {
+					$html .= '<section class="search-section"><div class="section-head"><h2>Feeds</h2><span class="section-note">'.count($feeds).' found</span></div>';
+					$html .= $this->theme->feeds_list($feeds, 'search-results');
+					$html .= '</section>';
+				}
+				if (count($tribunes)) {
+					$html .= '<section class="search-section"><div class="section-head"><h2>Tribunes</h2><span class="section-note">'.count($tribunes).' found</span></div>';
+					$html .= $this->theme->tribunes_list($tribunes, 'search-results');
+					$html .= '</section>';
+				}
+			}
+		} else {
+			$html .= '<div class="empty-state"><span class="empty-icon">'.icon('search').'</span><p>Search by title.</p></div>';
+		}
+
+		$html .= '</div>';
+		$this->theme->content = $html;
 		$this->theme->sidebar = $this->site->sidebar();
 		$this->theme->topbar = $this->site->topbar();
 		print $this->theme->html();
@@ -104,12 +133,18 @@ class Router {
 	}
 
 	public function feed_edit($parts, $get, $post) {
-		$user = User::load_from_url($parts[1]);
-		$feed = Feed::load_from_url($parts[2]);
+		if (!isset($parts[2]) and $this->site->user) {
+			header('HTTP/1.0 302 Found');
+			header('Location: /'.$this->site->user->home_url().'/new-feed');
+			die();
+		}
 
-		if (!$feed) {
+		$user = User::load_from_url($parts[1]);
+		$feed = Feed::load_from_url($parts[2] ?? '');
+
+		if (!$feed and ($parts[2] ?? '') === 'new-feed' and $user and $this->site->user and $user->id === $this->site->user->id) {
 			$feed = new Feed();
-			$feed->user_id = $this->site->user->id;
+			$feed->user_id = $user->id;
 		}
 
 		if ($user && $feed && $user->id === $feed->user_id) {
@@ -119,8 +154,13 @@ class Router {
 				} else {
 					$feed->insert();
 				}
+
+				header('HTTP/1.0 302 Found');
+				header('Location: /'.$feed->url());
+				die();
 			}
 
+			$this->theme->title = $feed->id ? 'Feed settings' : 'New feed';
 			$this->theme->content = $feed->edit();
 		}
 
@@ -310,10 +350,16 @@ class Router {
 
 		$board = new Board([$tribune], $tribune->url());
 
-		if ($new_post = $tribune->post($post, $this->site) and $this->json) {
-			$this->theme->content = $board->json([$new_post]);
-		} else if ($this->json) {
-			$this->theme->content = $board->json();
+		$new_post = null;
+		if (!empty($post['message'])) {
+			$new_post = $tribune->post($post, $this->site);
+			if ($new_post) {
+				header("X-Post-Id: {$new_post->post_id}");
+			}
+		}
+
+		if ($this->json) {
+			$this->theme->content = $board->json($new_post ? [$new_post] : null);
 		} else {
 			$this->theme->title = $tribune->title;
 			$this->theme->content = $board->show();
@@ -349,10 +395,16 @@ class Router {
 
 		$board = new Board([$tribune], $tribune->url());
 
-		if ($new_post = $tribune->post($post, $this->site) and $this->json) {
-			$this->theme->content = $board->json([$new_post]);
-		} else if ($this->json) {
-			$this->theme->content = $board->json();
+		$new_post = null;
+		if (!empty($post['message'])) {
+			$new_post = $tribune->post($post, $this->site);
+			if ($new_post) {
+				header("X-Post-Id: {$new_post->post_id}");
+			}
+		}
+
+		if ($this->json) {
+			$this->theme->content = $board->json($new_post ? [$new_post] : null);
 		} else {
 			$this->theme->title = $tribune->title;
 			$this->theme->content = $board->show();
@@ -376,14 +428,16 @@ class Router {
 		} else {
 			$board = new Board([$tribune], $tribune->url());
 
-			if (!empty($post['message']) and $new_post = $tribune->post($post, $this->site)) {
-				header("X-Post-Id: {$new_post->post_id}");
-
-				if ($this->json) {
-					$this->theme->content = $board->json([$new_post]);
+			$new_post = null;
+			if (!empty($post['message'])) {
+				$new_post = $tribune->post($post, $this->site);
+				if ($new_post) {
+					header("X-Post-Id: {$new_post->post_id}");
 				}
-			} else if ($this->json) {
-				$this->theme->content = $board->json();
+			}
+
+			if ($this->json) {
+				$this->theme->content = $board->json($new_post ? [$new_post] : null);
 			} else {
 				$this->theme->title = $tribune->title;
 				$this->theme->content = $board->show();
@@ -465,14 +519,16 @@ class Router {
 		if ($user && $tribune && $user->id === $tribune->user_id) {
 			$board = new Board([$tribune], $tribune->url());
 
-			if (!empty($post['message']) and $new_post = $tribune->post($post, $this->site)) {
-				header("X-Post-Id: {$new_post->post_id}");
-
-				if ($this->json) {
-					$this->theme->content = $board->json([$new_post]);
+			$new_post = null;
+			if (!empty($post['message'])) {
+				$new_post = $tribune->post($post, $this->site);
+				if ($new_post) {
+					header("X-Post-Id: {$new_post->post_id}");
 				}
-			} else if ($this->json) {
-				$this->theme->content = $board->json();
+			}
+
+			if ($this->json) {
+				$this->theme->content = $board->json($new_post ? [$new_post] : null);
 			} else {
 				$this->theme->title = $tribune->title;
 				$this->theme->content = $board->show();
