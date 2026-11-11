@@ -268,8 +268,13 @@
 	color: #fff;
 }
 
-.tribune .message .clock-reference:hover::before {
+.tribune .message .clock-reference:hover::before,
+.tribune .message .clock-reference.clock-hover::before {
 	background: var(--accent);
+}
+
+.tribune .message .clock-reference.clock-hover {
+	color: #fff;
 }
 
 [contenteditable].message .clock-reference:first-child {
